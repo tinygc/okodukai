@@ -22,7 +22,8 @@ class CategoryManagementViewModel @Inject constructor(
     private val getAllCategoriesUseCase: GetAllCategoriesUseCase,
     private val addCategoryUseCase: AddCategoryUseCase,
     private val updateCategoryUseCase: UpdateCategoryUseCase,
-    private val deleteCategoryUseCase: DeleteCategoryUseCase
+    private val deleteCategoryUseCase: DeleteCategoryUseCase,
+    private val initializeDefaultDataUseCase: com.tinygc.okodukai.domain.usecase.setup.InitializeDefaultDataUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CategoryManagementUiState())
@@ -63,6 +64,19 @@ class CategoryManagementViewModel @Inject constructor(
                 sendEvent(CategoryManagementEvent.ShowToast("カテゴリを削除しました"))
             } else {
                 sendEvent(CategoryManagementEvent.ShowToast("保存に失敗しました"))
+            }
+        }
+    }
+
+    fun resetToDefaults() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isResetting = true) }
+            val result = initializeDefaultDataUseCase.reset()
+            _uiState.update { it.copy(isResetting = false) }
+            if (result.isSuccess) {
+                sendEvent(CategoryManagementEvent.ShowToast("初期値にリセットしました"))
+            } else {
+                sendEvent(CategoryManagementEvent.ShowToast("リセットに失敗しました"))
             }
         }
     }

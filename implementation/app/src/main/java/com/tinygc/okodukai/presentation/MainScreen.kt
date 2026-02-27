@@ -2,10 +2,12 @@ package com.tinygc.okodukai.presentation
 
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.NavHost
@@ -15,6 +17,7 @@ import androidx.navigation.compose.rememberNavController
 import com.tinygc.okodukai.presentation.navigation.BottomNavDestination
 import com.tinygc.okodukai.presentation.screen.BudgetSettingScreen
 import com.tinygc.okodukai.presentation.screen.CategoryManagementScreen
+import com.tinygc.okodukai.presentation.screen.DefaultCategorySettingScreen
 import com.tinygc.okodukai.presentation.screen.ExpenseEntryScreen
 import com.tinygc.okodukai.presentation.screen.IncomeManagementScreen
 import com.tinygc.okodukai.presentation.screen.ManagementHubScreen
@@ -51,7 +54,14 @@ fun MainScreen() {
                             }
                         },
                         icon = destination.icon,
-                        label = { Text(destination.label) }
+                        label = { Text(destination.label) },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.onSurface,
+                            selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                            indicatorColor = MaterialTheme.colorScheme.surfaceVariant,
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     )
                 }
             }
@@ -75,7 +85,8 @@ fun MainScreen() {
                     onNavigateToTemplate = { navController.navigate("template_management") },
                     onNavigateToBudget = { navController.navigate("budget_setting") },
                     onNavigateToIncome = { navController.navigate("income_management") },
-                    onNavigateToHistory = { navController.navigate("monthly_history") }
+                    onNavigateToHistory = { navController.navigate("monthly_history") },
+                    onNavigateToDefaultCategory = { navController.navigate("default_category_setting") }
                 )
             }
             composable("category_management") {
@@ -104,6 +115,12 @@ fun MainScreen() {
             }
             composable("monthly_history") {
                 MonthlyHistoryScreen(
+                    paddingValues = paddingValues,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable("default_category_setting") {
+                DefaultCategorySettingScreen(
                     paddingValues = paddingValues,
                     onBack = { navController.popBackStack() }
                 )

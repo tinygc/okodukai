@@ -23,7 +23,9 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -39,6 +41,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.tinygc.okodukai.domain.model.Category
 import com.tinygc.okodukai.domain.model.Template
@@ -75,15 +78,25 @@ fun TemplateManagementScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = "テンプレ管理", style = MaterialTheme.typography.headlineSmall)
+            Text(
+                text = "テンプレ管理",
+                style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
+                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+            )
             TextButton(onClick = onBack) {
-                Text("戻る")
+                Text(
+                    text = "戻る",
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp)
+                )
             }
         }
         Spacer(modifier = Modifier.height(12.dp))
 
         Button(onClick = { showAddDialog = true }) {
-            Text("テンプレ追加")
+            Text(
+                text = "テンプレ追加",
+                style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp)
+            )
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -91,17 +104,37 @@ fun TemplateManagementScreen(
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(uiState.templates) { template ->
                 val categoryName = uiState.categories.find { it.id == template.categoryId }?.name ?: "未設定"
-                Row(
+                Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant
                 ) {
-                    Text(text = "${template.name} (${categoryName}) ${template.amount}円")
-                    Row {
-                        IconButton(onClick = { editTemplate = template }) {
-                            androidx.compose.material3.Icon(Icons.Filled.Edit, contentDescription = "編集")
-                        }
-                        IconButton(onClick = { viewModel.deleteTemplate(template) }) {
-                            androidx.compose.material3.Icon(Icons.Filled.Delete, contentDescription = "削除")
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "${template.name} (${categoryName}) ${template.amount}円",
+                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Row {
+                            IconButton(onClick = { editTemplate = template }) {
+                                androidx.compose.material3.Icon(
+                                    Icons.Filled.Edit,
+                                    contentDescription = "編集",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            IconButton(onClick = { viewModel.deleteTemplate(template) }) {
+                                androidx.compose.material3.Icon(
+                                    Icons.Filled.Delete,
+                                    contentDescription = "削除",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }
@@ -195,7 +228,9 @@ private fun TemplateDialog(
                         readOnly = true,
                         label = { Text("カテゴリ") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                        modifier = Modifier
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
+                            .fillMaxWidth()
                     )
                     ExposedDropdownMenu(
                         expanded = categoryExpanded,
@@ -227,7 +262,9 @@ private fun TemplateDialog(
                             readOnly = true,
                             label = { Text("サブカテゴリ") },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = subCategoryExpanded) },
-                            modifier = Modifier.menuAnchor().fillMaxWidth()
+                            modifier = Modifier
+                                .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
+                                .fillMaxWidth()
                         )
                         ExposedDropdownMenu(
                             expanded = subCategoryExpanded,

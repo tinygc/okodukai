@@ -71,15 +71,28 @@ class MonthlySummaryViewModel @Inject constructor(
                         totalAmount = domainTotal.total
                     )
                 }
+
+                val sortedTotals = categoryTotals.sortedByDescending { it.totalAmount }
+                val topCategories = sortedTotals.take(3)
+                val otherTotal = sortedTotals.drop(3).sumOf { it.totalAmount }
+
+                val totalIncome = 0
+                val budgetAmount = summary.budget ?: 0
+                val totalExpense = summary.totalExpense
+                val isEmptyMonth =
+                    budgetAmount == 0 && totalExpense == 0 && totalIncome == 0 && expenseItems.isEmpty()
                 
                 _uiState.value = _uiState.value.copy(
                     month = month,
                     budget = summary.budget,
-                    totalExpense = summary.totalExpense,
+                    totalExpense = totalExpense,
                     remainingBudget = summary.remainingBudget,
                     categoryTotals = categoryTotals,
+                    topCategories = topCategories,
+                    otherTotal = otherTotal,
                     expenseItems = expenseItems,
-                    totalIncome = null, // TODO: 臨時収入は別途取得
+                    totalIncome = totalIncome, // TODO: 臨時収入は別途取得
+                    isEmptyMonth = isEmptyMonth,
                     isLoading = false
                 )
             } catch (e: Exception) {

@@ -199,8 +199,8 @@ class FakeCategoryRepository : CategoryRepository {
         return Result.success(categories.filter { it.parentId == parentId })
     }
 
-    override suspend fun getCategoryById(categoryId: String): Result<Category?> {
-        return Result.success(categories.find { it.id == categoryId })
+    override suspend fun getCategoryById(id: String): Result<Category?> {
+        return Result.success(categories.find { it.id == id })
     }
 
     override fun observeAllCategories(): Flow<List<Category>> {

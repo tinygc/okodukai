@@ -1,0 +1,162 @@
+
+> Configure project :app
+WARNING: The option setting 'android.disallowKotlinSourceSets=false' is experimental.
+The current default is 'true'.
+WARNING: The property android.dependency.excludeLibraryComponentsFromConstraints improves project import performance for very large projects. It should be enabled to improve performance.
+To suppress this warning, add android.generateSyncIssueWhenLibraryConstraintsAreEnabled=false to gradle.properties
+WARNING: The property android.dependency.excludeLibraryComponentsFromConstraints improves project import performance for very large projects. It should be enabled to improve performance.
+To suppress this warning, add android.generateSyncIssueWhenLibraryConstraintsAreEnabled=false to gradle.properties
+WARNING: The property android.dependency.excludeLibraryComponentsFromConstraints improves project import performance for very large projects. It should be enabled to improve performance.
+To suppress this warning, add android.generateSyncIssueWhenLibraryConstraintsAreEnabled=false to gradle.properties
+WARNING: The property android.dependency.excludeLibraryComponentsFromConstraints improves project import performance for very large projects. It should be enabled to improve performance.
+To suppress this warning, add android.generateSyncIssueWhenLibraryConstraintsAreEnabled=false to gradle.properties
+
+> Task :app:clean
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :app:processDebugNavigationResources
+> Task :app:parseDebugLocalResources
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:javaPreCompileDebug
+> Task :app:generateDebugRFile
+> Task :app:mergeDebugAssets
+> Task :app:compressDebugAssets
+> Task :app:desugarDebugFileDependencies
+> Task :app:checkDebugDuplicateClasses
+> Task :app:checkDebugAarMetadata
+> Task :app:compileDebugNavigationResources
+> Task :app:mergeLibDexDebug
+> Task :app:mapDebugSourceSetPaths
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+> Task :app:mergeDebugResources
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:mergeDebugJniLibFolders
+> Task :app:mergeDebugNativeLibs
+> Task :app:validateSigningDebug
+> Task :app:writeDebugAppMetadata
+
+> Task :app:stripDebugDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so. Run with --info option to learn more.
+
+> Task :app:writeDebugSigningConfigVersions
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:mergeReleaseNativeLibs
+> Task :app:generateReleaseResources
+
+> Task :app:stripReleaseDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so. Run with --info option to learn more.
+
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:packageReleaseResources
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseNavigationResources
+> Task :app:mergeReleaseNativeDebugMetadata NO-SOURCE
+> Task :app:parseReleaseLocalResources
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:compileReleaseNavigationResources
+> Task :app:generateReleaseRFile
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:mergeExtDexDebug
+> Task :app:extractDeepLinksRelease
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:desugarReleaseFileDependencies
+> Task :app:mergeReleaseStartupProfile
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseResources
+> Task :app:kspDebugKotlin
+> Task :app:kspReleaseKotlin
+> Task :app:processDebugManifestForPackage
+> Task :app:mergeExtDexRelease
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseArtProfile
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:extractProguardFiles
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest
+> Task :app:processReleaseResources
+> Task :app:processDebugResources
+> Task :app:optimizeReleaseResources
+
+> Task :app:compileDebugKotlin
+w: file:///C:/Users/tinyg/Okodukai/implementation/app/src/main/java/com/tinygc/okodukai/di/DatabaseModule.kt:35:14 'fun fallbackToDestructiveMigration(): RoomDatabase.Builder<OkodukaiDatabase>' is deprecated. Replace by overloaded version with parameter to indicate if all tables should be dropped or not.
+
+> Task :app:compileReleaseKotlin
+w: file:///C:/Users/tinyg/Okodukai/implementation/app/src/main/java/com/tinygc/okodukai/di/DatabaseModule.kt:35:14 'fun fallbackToDestructiveMigration(): RoomDatabase.Builder<OkodukaiDatabase>' is deprecated. Replace by overloaded version with parameter to indicate if all tables should be dropped or not.
+
+> Task :app:compileDebugJavaWithJavac
+> Task :app:processDebugJavaRes
+> Task :app:hiltSyncDebug
+> Task :app:mergeDebugJavaResource
+> Task :app:hiltAggregateDepsDebug
+> Task :app:compileReleaseJavaWithJavac
+> Task :app:hiltJavaCompileDebug
+> Task :app:hiltSyncRelease
+> Task :app:hiltAggregateDepsRelease
+> Task :app:transformDebugClassesWithAsm
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:dexBuilderDebug
+> Task :app:mergeProjectDexDebug
+> Task :app:hiltJavaCompileRelease
+> Task :app:transformReleaseClassesWithAsm
+> Task :app:dexBuilderRelease
+> Task :app:mergeReleaseGlobalSynthetics
+> Task :app:processReleaseJavaRes
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:generateDebugLintReportModel
+> Task :app:generateDebugAndroidTestLintModel
+> Task :app:generateDebugUnitTestLintModel
+> Task :app:mergeReleaseJavaResource
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect
+> Task :app:assembleDebug
+> Task :app:kspDebugUnitTestKotlin
+> Task :app:mergeDexRelease
+> Task :app:compileReleaseArtProfile
+> Task :app:compileDebugUnitTestKotlin
+> Task :app:processDebugUnitTestJavaRes
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:hiltSyncDebugUnitTest
+> Task :app:hiltAggregateDepsDebugUnitTest
+> Task :app:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :app:transformDebugUnitTestClassesWithAsm
+> Task :app:lintAnalyzeDebugAndroidTest
+> Task :app:testDebugUnitTest
+> Task :app:test
+> Task :app:lintAnalyzeDebug
+> Task :app:lintAnalyzeDebugUnitTest
+> Task :app:lintVitalReportRelease SKIPPED
+> Task :app:lintVitalRelease SKIPPED
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+> Task :app:assemble
+
+> Task :app:lintReportDebug
+Wrote HTML report to file:///C:/Users/tinyg/Okodukai/implementation/app/build/reports/lint-results-debug.html
+
+> Task :app:lintDebug
+> Task :app:lint
+> Task :app:check
+> Task :app:build
+
+BUILD SUCCESSFUL in 3m 7s
+111 actionable tasks: 111 executed
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.1.0/userguide/configuration_cache_enabling.html

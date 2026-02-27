@@ -17,6 +17,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.Icons
@@ -32,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.tinygc.okodukai.domain.model.Category
 
@@ -68,15 +70,36 @@ fun CategoryManagementScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = "カテゴリ管理", style = MaterialTheme.typography.headlineSmall)
+            Text(
+                text = "カテゴリ管理",
+                style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
+                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+            )
             TextButton(onClick = onBack) {
-                Text("戻る")
+                Text(
+                    text = "戻る",
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp)
+                )
             }
         }
         Spacer(modifier = Modifier.height(12.dp))
 
-        Button(onClick = { showAddParentDialog = true }) {
-            Text("カテゴリ追加")
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Button(onClick = { showAddParentDialog = true }) {
+                Text(
+                    text = "カテゴリ追加",
+                    style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp)
+                )
+            }
+            Button(onClick = { viewModel.resetToDefaults() }) {
+                Text(
+                    text = "リセット",
+                    style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp)
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -138,38 +161,73 @@ private fun CategoryGroupItem(
     onEdit: (Category) -> Unit,
     onDelete: (Category) -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(text = parent.name, style = MaterialTheme.typography.titleMedium)
-            Row {
-                IconButton(onClick = { onEdit(parent) }) {
-                    androidx.compose.material3.Icon(Icons.Filled.Edit, contentDescription = "編集")
-                }
-                IconButton(onClick = { onDelete(parent) }) {
-                    androidx.compose.material3.Icon(Icons.Filled.Delete, contentDescription = "削除")
-                }
-            }
-        }
-        Spacer(modifier = Modifier.height(4.dp))
-        Button(onClick = onAddSub) {
-            Text("サブカテゴリ追加")
-        }
-        Spacer(modifier = Modifier.height(6.dp))
-        subCategories.forEach { sub ->
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(start = 12.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = "- ${sub.name}")
+                Text(
+                    text = parent.name,
+                    style = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 Row {
-                    IconButton(onClick = { onEdit(sub) }) {
-                        androidx.compose.material3.Icon(Icons.Filled.Edit, contentDescription = "編集")
+                    IconButton(onClick = { onEdit(parent) }) {
+                        androidx.compose.material3.Icon(
+                            Icons.Filled.Edit,
+                            contentDescription = "編集",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
-                    IconButton(onClick = { onDelete(sub) }) {
-                        androidx.compose.material3.Icon(Icons.Filled.Delete, contentDescription = "削除")
+                    IconButton(onClick = { onDelete(parent) }) {
+                        androidx.compose.material3.Icon(
+                            Icons.Filled.Delete,
+                            contentDescription = "削除",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Button(onClick = onAddSub) {
+                Text(
+                    text = "サブカテゴリ追加",
+                    style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp)
+                )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            subCategories.forEach { sub ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "- ${sub.name}",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Row {
+                        IconButton(onClick = { onEdit(sub) }) {
+                            androidx.compose.material3.Icon(
+                                Icons.Filled.Edit,
+                                contentDescription = "編集",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        IconButton(onClick = { onDelete(sub) }) {
+                            androidx.compose.material3.Icon(
+                                Icons.Filled.Delete,
+                                contentDescription = "削除",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }

@@ -1,10 +1,6 @@
-# Copilot Instructions
-
-## 基本設定
-- 回答やドキュメントは常に日本語
-- 思考は英語
-- ギャルになりきった口調で応答
-- GitHub: https://github.com/tinygc / tinygc404@gmail.com
+---
+trigger: always_on
+---
 
 ## プロジェクト概要（WHAT）
 - Androidで使えるおこづかいアプリ

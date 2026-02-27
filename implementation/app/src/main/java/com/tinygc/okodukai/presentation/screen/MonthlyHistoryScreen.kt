@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.tinygc.okodukai.presentation.viewmodel.MonthlyHistoryViewModel
 import com.tinygc.okodukai.presentation.viewmodel.MonthlyHistoryItem
@@ -43,11 +44,14 @@ fun MonthlyHistoryScreen(
             ) {
                 Text(
                     text = "月次履歴",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
+                    fontWeight = FontWeight.SemiBold
                 )
-                Button(onClick = onBack) {
-                    Text("戻る")
+                TextButton(onClick = onBack) {
+                    Text(
+                        text = "戻る",
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp)
+                    )
                 }
             }
         }
@@ -66,12 +70,12 @@ fun MonthlyHistoryScreen(
                 ) {
                     Text(
                         text = "📊 過去12ヶ月の予算・支出の推移",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleSmall.copy(fontSize = 14.sp),
+                        fontWeight = FontWeight.SemiBold
                     )
                     Text(
                         text = "月ごとの予算設定と実際の支出、および臨時収入を確認できます",
-                        style = MaterialTheme.typography.bodySmall
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp)
                     )
                 }
             }
@@ -93,13 +97,13 @@ fun MonthlyHistoryScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 ) {
                     Text(
                         text = error,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
                         modifier = Modifier.padding(12.dp)
                     )
                 }
@@ -129,7 +133,10 @@ private fun MonthlyHistoryCard(
     currencyFormatter: NumberFormat
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -138,9 +145,9 @@ private fun MonthlyHistoryCard(
             // Month header
             Text(
                 text = formatMonthForHistory(item.month),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             // Budget row
@@ -149,13 +156,12 @@ private fun MonthlyHistoryCard(
                     label = "予算",
                     amount = item.budget,
                     currencyFormatter = currencyFormatter,
-                    color = MaterialTheme.colorScheme.primary,
                     percentage = null
                 )
             } else {
                 Text(
                     text = "予算未設定",
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -165,7 +171,6 @@ private fun MonthlyHistoryCard(
                 label = "支出",
                 amount = item.totalExpense,
                 currencyFormatter = currencyFormatter,
-                color = MaterialTheme.colorScheme.error,
                 percentage = item.budget?.let { budget ->
                     if (budget > 0) (item.totalExpense.toFloat() / budget) else 0f
                 }
@@ -186,13 +191,14 @@ private fun MonthlyHistoryCard(
                 ) {
                     Text(
                         text = "残額",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = currencyFormatter.format(item.remainingBudget),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                        fontWeight = FontWeight.SemiBold,
                         color = remainingColor
                     )
                 }
@@ -207,14 +213,15 @@ private fun MonthlyHistoryCard(
                 ) {
                     Text(
                         text = "臨時収入",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = currencyFormatter.format(item.totalIncome),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.tertiary
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -227,7 +234,6 @@ private fun HistoryRowWithBar(
     label: String,
     amount: Int,
     currencyFormatter: NumberFormat,
-    color: androidx.compose.ui.graphics.Color,
     percentage: Float?
 ) {
     Column(
@@ -241,8 +247,9 @@ private fun HistoryRowWithBar(
         ) {
             Text(
                 text = label,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -250,14 +257,14 @@ private fun HistoryRowWithBar(
             ) {
                 Text(
                     text = currencyFormatter.format(amount),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = color
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 if (percentage != null) {
                     Text(
                         text = "${(percentage * 100).toInt()}%",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -271,8 +278,8 @@ private fun HistoryRowWithBar(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(6.dp),
-                color = color,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                trackColor = MaterialTheme.colorScheme.outlineVariant
             )
         }
     }

@@ -1,6 +1,8 @@
 ---
-applyTo: "requirement/*.md"
+trigger: glob
+globs: reqirement/**
 ---
+
 # 要件定義ドキュメントの作成
 - 要件はユーザからヒヤリングを行って明確にしてください
 - 要件定義は測定可能で検証可能な形で記述してください

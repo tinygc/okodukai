@@ -2,6 +2,7 @@ package com.tinygc.okodukai.presentation.screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tinygc.okodukai.data.local.preference.UserPreferencesDataStore
 import com.tinygc.okodukai.domain.usecase.category.GetParentCategoriesUseCase
 import com.tinygc.okodukai.domain.usecase.category.GetSubCategoriesUseCase
 import com.tinygc.okodukai.domain.usecase.expense.AddExpenseUseCase
@@ -25,7 +26,8 @@ class ExpenseEntryViewModel @Inject constructor(
     private val getParentCategoriesUseCase: GetParentCategoriesUseCase,
     private val getSubCategoriesUseCase: GetSubCategoriesUseCase,
     private val getAllTemplatesUseCase: GetAllTemplatesUseCase,
-    private val createExpenseFromTemplateUseCase: CreateExpenseFromTemplateUseCase
+    private val createExpenseFromTemplateUseCase: CreateExpenseFromTemplateUseCase,
+    private val userPreferencesDataStore: UserPreferencesDataStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -43,6 +45,7 @@ class ExpenseEntryViewModel @Inject constructor(
     init {
         observeCategories()
         observeTemplates()
+        applyDefaultCategory()
     }
 
     fun onTabSelected(tab: ExpenseEntryTab) {
@@ -51,6 +54,16 @@ class ExpenseEntryViewModel @Inject constructor(
 
     fun onAmountChange(value: String) {
         _uiState.update { it.copy(amountInput = value) }
+    }
+
+    fun onQuickAmountAdd(amount: Int) {
+        val currentAmount = _uiState.value.amountInput.toIntOrNull() ?: 0
+        val newAmount = currentAmount + amount
+        _uiState.update { it.copy(amountInput = newAmount.toString()) }
+    }
+
+    fun onResetAmount() {
+        _uiState.update { it.copy(amountInput = "") }
     }
 
     fun onDateChange(value: String) {
@@ -135,6 +148,17 @@ class ExpenseEntryViewModel @Inject constructor(
         viewModelScope.launch {
             getParentCategoriesUseCase.observe().collect { categories ->
                 _uiState.update { it.copy(categories = categories) }
+            }
+        }
+    }
+
+    private fun applyDefaultCategory() {
+        viewModelScope.launch {
+            userPreferencesDataStore.defaultCategoryId.collect { defaultId ->
+                // まだカテゴリが未選択のときだけデフォルトを適用する
+                if (_uiState.value.selectedCategoryId == null && defaultId != null) {
+                    onCategorySelected(defaultId)
+                }
             }
         }
     }

@@ -3,8 +3,8 @@ package com.tinygc.okodukai.presentation.screen
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.tinygc.okodukai.presentation.viewmodel.BudgetSettingViewModel
@@ -45,11 +46,14 @@ fun BudgetSettingScreen(
             ) {
                 Text(
                     text = "予算設定",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
+                    fontWeight = FontWeight.SemiBold
                 )
-                Button(onClick = onBack) {
-                    Text("戻る")
+                TextButton(onClick = onBack) {
+                    Text(
+                        text = "戻る",
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp)
+                    )
                 }
             }
         }
@@ -69,7 +73,7 @@ fun BudgetSettingScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 ) {
                     Column(
@@ -78,14 +82,14 @@ fun BudgetSettingScreen(
                     ) {
                         Text(
                             text = "現在の予算",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
                             text = currencyFormatter.format(uiState.currentBudget),
-                            style = MaterialTheme.typography.headlineSmall,
+                            style = MaterialTheme.typography.headlineSmall.copy(fontSize = 28.sp),
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -103,8 +107,8 @@ fun BudgetSettingScreen(
                 ) {
                     Text(
                         text = "新しい予算を入力",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
+                        fontWeight = FontWeight.SemiBold
                     )
 
                     OutlinedTextField(
@@ -121,8 +125,8 @@ fun BudgetSettingScreen(
                     if (uiState.budgetAmount.isNotEmpty()) {
                         Text(
                             text = "入力額: ${currencyFormatter.format(uiState.budgetAmount.toIntOrNull() ?: 0)}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
+                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
@@ -141,7 +145,10 @@ fun BudgetSettingScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                         }
-                        Text(if (uiState.isSaving) "保存中..." else "予算を保存")
+                        Text(
+                            text = if (uiState.isSaving) "保存中..." else "予算を保存",
+                            style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp)
+                        )
                     }
                 }
             }
@@ -153,13 +160,13 @@ fun BudgetSettingScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 ) {
                     Text(
                         text = error,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
                         modifier = Modifier.padding(12.dp)
                     )
                 }
@@ -172,13 +179,13 @@ fun BudgetSettingScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 ) {
                     Text(
                         text = message,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer,
-                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
                         modifier = Modifier.padding(12.dp)
                     )
                 }
@@ -199,20 +206,20 @@ fun BudgetSettingScreen(
                 ) {
                     Text(
                         text = "ℹ️ 予算について",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleSmall.copy(fontSize = 14.sp),
+                        fontWeight = FontWeight.SemiBold
                     )
                     Text(
                         text = "• 毎月の予算を設定します",
-                        style = MaterialTheme.typography.bodySmall
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp)
                     )
                     Text(
                         text = "• 月ごとに独立した予算になります",
-                        style = MaterialTheme.typography.bodySmall
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp)
                     )
                     Text(
                         text = "• 予算を変更すると上書きされます",
-                        style = MaterialTheme.typography.bodySmall
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp)
                     )
                 }
             }
@@ -252,17 +259,17 @@ private fun MonthSelectorCardForBudget(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onPreviousMonth) {
-                Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "前の月")
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "前の月")
             }
 
             Text(
                 text = formatMonthDisplay(currentMonth),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
+                fontWeight = FontWeight.SemiBold
             )
 
             IconButton(onClick = onNextMonth) {
-                Icon(Icons.Default.KeyboardArrowRight, contentDescription = "次の月")
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "次の月")
             }
         }
     }
@@ -279,15 +286,35 @@ private fun getPreviousMonth(currentMonth: String): String {
 }
 
 private fun getNextMonth(currentMonth: String): String {
-    val (year, month) = currentMonth.split("-").map { it.toInt() }
-    return if (month == 12) {
-        String.format("%04d-%02d", year + 1, 1)
-    } else {
-        String.format("%04d-%02d", year, month + 1)
+    return try {
+        val parts = currentMonth.split("-")
+        if (parts.size == 2) {
+            val year = parts[0].toInt()
+            val month = parts[1].toInt()
+            if (month == 12) {
+                String.format("%04d-%02d", year + 1, 1)
+            } else {
+                String.format("%04d-%02d", year, month + 1)
+            }
+        } else {
+            currentMonth
+        }
+    } catch (e: Exception) {
+        currentMonth
     }
 }
 
 private fun formatMonthDisplay(month: String): String {
-    val (year, monthNum) = month.split("-")
-    return "${year}年${monthNum.toInt()}月"
+    return try {
+        val parts = month.split("-")
+        if (parts.size == 2) {
+            val year = parts[0]
+            val monthNum = parts[1].toInt()
+            "${year}年${monthNum}月"
+        } else {
+            month
+        }
+    } catch (e: Exception) {
+        month
+    }
 }

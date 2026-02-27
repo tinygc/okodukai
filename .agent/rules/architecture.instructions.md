@@ -1,6 +1,8 @@
 ---
-applyTo: "architecture/*.md"
+trigger: glob
+globs: architecture/**
 ---
+
 # デフォルトアーキテクチャ
 - Clean Architectureを適用してください（Presentation → Domain → Data層の分離）
 - 各レイヤの依存関係を明確に分離してください

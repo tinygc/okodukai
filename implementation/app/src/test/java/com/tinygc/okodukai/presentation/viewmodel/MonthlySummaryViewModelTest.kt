@@ -214,4 +214,62 @@ class MonthlySummaryViewModelTest {
         assertTrue(state.categoryTotals.isEmpty())
         assertTrue(state.expenseItems.isEmpty())
     }
+
+    @Test
+    fun `カテゴリTop3とその他が正しく算出されること`() = runTest {
+        // Given
+        val currentMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"))
+
+        val cat1 = Category("cat1", "食費", null, "", "")
+        val cat2 = Category("cat2", "交通費", null, "", "")
+        val cat3 = Category("cat3", "日用品", null, "", "")
+        val cat4 = Category("cat4", "趣味", null, "", "")
+        fakeCategoryRepository.addCategory(cat1)
+        fakeCategoryRepository.addCategory(cat2)
+        fakeCategoryRepository.addCategory(cat3)
+        fakeCategoryRepository.addCategory(cat4)
+
+        fakeExpenseRepository.expenses.addAll(
+            listOf(
+                Expense("e1", "$currentMonth-01", 1000, "cat1", null, null, false, "", ""),
+                Expense("e2", "$currentMonth-02", 3000, "cat2", null, null, false, "", ""),
+                Expense("e3", "$currentMonth-03", 2000, "cat3", null, null, false, "", ""),
+                Expense("e4", "$currentMonth-04", 500, "cat4", null, null, false, "", "")
+            )
+        )
+
+        // When
+        viewModel = MonthlySummaryViewModel(
+            getMonthlySummaryUseCase,
+            deleteExpenseUseCase,
+            getCategoryByIdUseCase
+        )
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertEquals(3, state.topCategories.size)
+        assertEquals("交通費", state.topCategories[0].categoryName)
+        assertEquals(3000, state.topCategories[0].totalAmount)
+        assertEquals("日用品", state.topCategories[1].categoryName)
+        assertEquals(2000, state.topCategories[1].totalAmount)
+        assertEquals("食費", state.topCategories[2].categoryName)
+        assertEquals(1000, state.topCategories[2].totalAmount)
+        assertEquals(500, state.otherTotal)
+    }
+
+    @Test
+    fun `空月の判定が正しく行われること`() = runTest {
+        // Given
+        viewModel = MonthlySummaryViewModel(
+            getMonthlySummaryUseCase,
+            deleteExpenseUseCase,
+            getCategoryByIdUseCase
+        )
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertTrue(state.isEmptyMonth)
+    }
 }

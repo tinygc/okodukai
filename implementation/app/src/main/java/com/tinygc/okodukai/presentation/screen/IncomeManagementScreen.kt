@@ -6,8 +6,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.tinygc.okodukai.domain.model.Income
@@ -52,11 +53,14 @@ fun IncomeManagementScreen(
             ) {
                 Text(
                     text = "臨時収入管理",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
+                    fontWeight = FontWeight.SemiBold
                 )
-                Button(onClick = onBack) {
-                    Text("戻る")
+                TextButton(onClick = onBack) {
+                    Text(
+                        text = "戻る",
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp)
+                    )
                 }
             }
         }
@@ -75,7 +79,7 @@ fun IncomeManagementScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             ) {
                 Column(
@@ -84,14 +88,14 @@ fun IncomeManagementScreen(
                 ) {
                     Text(
                         text = "今月の臨時収入合計",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = currencyFormatter.format(uiState.totalIncome),
-                        style = MaterialTheme.typography.headlineSmall,
+                        style = MaterialTheme.typography.headlineSmall.copy(fontSize = 28.sp),
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -106,7 +110,10 @@ fun IncomeManagementScreen(
             ) {
                 Icon(Icons.Default.Add, contentDescription = "追加")
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("臨時収入を追加")
+                Text(
+                    text = "臨時収入を追加",
+                    style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp)
+                )
             }
         }
 
@@ -115,8 +122,8 @@ fun IncomeManagementScreen(
             item {
                 Text(
                     text = "臨時収入一覧",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
+                    fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
             }
@@ -134,7 +141,7 @@ fun IncomeManagementScreen(
             item {
                 Text(
                     text = "この月の臨時収入はまだ登録されていません",
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(vertical = 24.dp)
                 )
@@ -147,13 +154,13 @@ fun IncomeManagementScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 ) {
                     Text(
                         text = error,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
                         modifier = Modifier.padding(12.dp)
                     )
                 }
@@ -166,13 +173,13 @@ fun IncomeManagementScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 ) {
                     Text(
                         text = message,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer,
-                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
                         modifier = Modifier.padding(12.dp)
                     )
                 }
@@ -253,17 +260,17 @@ private fun MonthSelectorCardForIncome(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onPreviousMonth) {
-                Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "前の月")
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "前の月")
             }
 
             Text(
                 text = formatMonthDisplay(currentMonth),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
+                fontWeight = FontWeight.SemiBold
             )
 
             IconButton(onClick = onNextMonth) {
-                Icon(Icons.Default.KeyboardArrowRight, contentDescription = "次の月")
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "次の月")
             }
         }
     }
@@ -276,7 +283,10 @@ private fun IncomeListItem(
     onDelete: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
     ) {
         Row(
             modifier = Modifier
@@ -291,22 +301,22 @@ private fun IncomeListItem(
             ) {
                 Text(
                     text = currencyFormatter.format(income.amount),
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.primary
+                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp),
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 income.memo?.let { memo ->
                     if (memo.isNotBlank()) {
                         Text(
                             text = memo,
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
                 Text(
                     text = formatDateDisplay(income.date),
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -315,7 +325,7 @@ private fun IncomeListItem(
                 Icon(
                     Icons.Default.Delete,
                     contentDescription = "削除",
-                    tint = MaterialTheme.colorScheme.error
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -416,8 +426,18 @@ private fun getNextMonth(currentMonth: String): String {
 }
 
 private fun formatMonthDisplay(month: String): String {
-    val (year, monthNum) = month.split("-")
-    return "${year}年${monthNum.toInt()}月"
+    return try {
+        val parts = month.split("-")
+        if (parts.size == 2) {
+            val year = parts[0]
+            val monthNum = parts[1].toInt()
+            "${year}年${monthNum}月"
+        } else {
+            month
+        }
+    } catch (e: Exception) {
+        month
+    }
 }
 
 private fun formatDateDisplay(date: String): String {
