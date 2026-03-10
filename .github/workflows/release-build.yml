@@ -1,0 +1,108 @@
+name: Release Build
+
+"on":
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: "GitHub Releaseを作成する"
+        required: true
+        type: boolean
+        default: true
+      release_tag:
+        description: "Releaseタグ名（空なら auto-v<run_number>）"
+        required: false
+        type: string
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+        working-directory: implementation
+
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.OKODUKAI_KEYSTORE_BASE64 }}" | base64 -d > implementation/okodukai-release.jks
+
+      - name: Build Release APK and AAB
+        env:
+          OKODUKAI_STORE_FILE: ../okodukai-release.jks
+          OKODUKAI_STORE_PASSWORD: ${{ secrets.OKODUKAI_STORE_PASSWORD }}
+          OKODUKAI_KEY_ALIAS: ${{ secrets.OKODUKAI_KEY_ALIAS }}
+          OKODUKAI_KEY_PASSWORD: ${{ secrets.OKODUKAI_KEY_PASSWORD }}
+        run: |
+          ./gradlew :app:assembleRelease :app:bundleRelease
+        working-directory: implementation
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: okodukai-release-apk
+          path: implementation/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: okodukai-release-aab
+          path: implementation/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+
+      - name: Resolve release tag
+        id: release_tag
+        if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.create_release) }}
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            TAG="${{ github.ref_name }}"
+          elif [ -n "${{ inputs.release_tag }}" ]; then
+            TAG="${{ inputs.release_tag }}"
+          else
+            TAG="auto-v${{ github.run_number }}"
+          fi
+
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.create_release) }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_tag.outputs.tag }}
+          name: Okodukai ${{ steps.release_tag.outputs.tag }}
+          generate_release_notes: true
+          files: |
+            implementation/app/build/outputs/apk/release/*.apk
+            implementation/app/build/outputs/bundle/release/*.aab
+
+      - name: Summary
+        run: |
+          echo "## Release build completed" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- APK: implementation/app/build/outputs/apk/release/*.apk" >> "$GITHUB_STEP_SUMMARY"
+          echo "- AAB: implementation/app/build/outputs/bundle/release/*.aab" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "- Tag: ${{ github.ref_name }}" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "${{ inputs.create_release }}" = "true" ]; then
+            echo "- Tag: ${{ steps.release_tag.outputs.tag }}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "- Release作成: スキップ" >> "$GITHUB_STEP_SUMMARY"
+          fi

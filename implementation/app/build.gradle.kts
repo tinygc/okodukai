@@ -6,9 +6,29 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+import java.util.Properties
+
 android {
     namespace = "com.tinygc.okodukai"
     compileSdk = 36
+
+    val localProperties = Properties().apply {
+        val file = rootProject.file("local.properties")
+        if (file.exists()) {
+            file.inputStream().use { load(it) }
+        }
+    }
+
+    fun propOrEnv(name: String): String? {
+        val localValue = localProperties.getProperty(name)
+        val envValue = System.getenv(name)
+        return (localValue ?: envValue)?.takeIf { it.isNotBlank() }
+    }
+
+    val releaseStoreFile = propOrEnv("OKODUKAI_STORE_FILE") ?: "../okodukai-release.jks"
+    val releaseStorePassword = propOrEnv("OKODUKAI_STORE_PASSWORD") ?: ""
+    val releaseKeyAlias = propOrEnv("OKODUKAI_KEY_ALIAS") ?: "okodukai"
+    val releaseKeyPassword = propOrEnv("OKODUKAI_KEY_PASSWORD") ?: ""
 
     defaultConfig {
         applicationId = "com.tinygc.okodukai"
@@ -23,8 +43,18 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file(releaseStoreFile)
+            storePassword = releaseStorePassword
+            keyAlias = releaseKeyAlias
+            keyPassword = releaseKeyPassword
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

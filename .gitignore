@@ -1,5 +1,7 @@
 # Github Copilot
-.github/
+.github/*
+!.github/workflows/
+!.github/workflows/**
 
 # VS Code workspace settings
 .vscode/

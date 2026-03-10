@@ -133,6 +133,39 @@ cd okodukai
 ./gradlew installDebug
 ```
 
+### GitHub Actionsで正式署名リリースを作る
+
+Play Console提出用の署名付きAPK/AABは、[.github/workflows/release-build.yml](.github/workflows/release-build.yml) で自動作成できます。
+
+1. GitHub Secretsを登録
+  - `OKODUKAI_KEYSTORE_BASE64`: keystoreファイルをBase64化した値
+  - `OKODUKAI_STORE_PASSWORD`: keystoreのパスワード
+  - `OKODUKAI_KEY_ALIAS`: キーエイリアス
+  - `OKODUKAI_KEY_PASSWORD`: キーのパスワード
+
+2. keystoreをBase64化（ローカル実行例）
+
+```bash
+base64 -w 0 okodukai-release.jks
+```
+
+3. Actions実行
+  - GitHubのActionsタブから `Release Build` を手動実行
+  - または `v1.0.0` のようなタグをpushして自動実行
+
+4. 出力物
+  - Actions Artifact: 署名済み APK / AAB
+  - GitHub Release: タグに紐づくAPK/AAB添付
+
+ローカルで署名付きリリースを作る場合は `implementation/local.properties` に以下を設定してください。
+
+```properties
+OKODUKAI_STORE_FILE=../okodukai-release.jks
+OKODUKAI_STORE_PASSWORD=your_store_password
+OKODUKAI_KEY_ALIAS=your_key_alias
+OKODUKAI_KEY_PASSWORD=your_key_password
+```
+
 ---
 
 ## 📊 プロジェクト進捗
