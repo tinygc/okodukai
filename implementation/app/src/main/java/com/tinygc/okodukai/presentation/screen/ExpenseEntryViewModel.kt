@@ -134,7 +134,8 @@ class ExpenseEntryViewModel @Inject constructor(
             val result = createExpenseFromTemplateUseCase(
                 templateCategoryId = templateCategoryId,
                 templateSubCategoryId = templateSubCategoryId,
-                templateAmount = templateAmount
+                templateAmount = templateAmount,
+                date = _uiState.value.dateInput
             )
             if (result.isSuccess) {
                 sendEvent(ExpenseEntryUiEvent.ShowToast("記録しました"))
