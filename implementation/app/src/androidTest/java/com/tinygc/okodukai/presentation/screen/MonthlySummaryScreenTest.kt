@@ -167,6 +167,59 @@ class MonthlySummaryScreenTest {
         }
     }
 
+    @Test
+    fun showAllExpensesButtonClickCallsCallback() {
+        val uiState = MonthlySummaryUiState(
+            month = "2026-02",
+            budget = 50000,
+            totalExpense = 1200,
+            remainingBudget = 48800,
+            topCategories = listOf(
+                CategoryTotalUiModel("c1", "食費", 1200)
+            ),
+            otherTotal = 0,
+            expenseItems = listOf(
+                ExpenseItem(
+                    id = "e1",
+                    date = "2026-02-01",
+                    amount = 1200,
+                    categoryId = "c1",
+                    subCategoryId = null,
+                    categoryName = "食費",
+                    subCategoryName = null,
+                    memo = null,
+                    isUncategorized = false,
+                    createdAt = "",
+                    updatedAt = ""
+                )
+            )
+        )
+
+        var showAllExpensesClicked = false
+
+        composeRule.setContent {
+            MaterialTheme {
+                MonthlySummaryContent(
+                    paddingValues = androidx.compose.foundation.layout.PaddingValues(0.dp),
+                    uiState = uiState,
+                    onPreviousMonth = {},
+                    onNextMonth = {},
+                    onBackToCurrentMonth = {},
+                    showBackToCurrentMonth = false,
+                    onUpdateExpense = { _, _, _, _ -> },
+                    onDeleteExpense = {},
+                    onShowAllCategories = {},
+                    onShowAllExpenses = { showAllExpensesClicked = true }
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("全件表示 ＞").performClick()
+        composeRule.runOnIdle {
+            assertEquals(true, showAllExpensesClicked)
+        }
+    }
+
     private fun assertTextDisplayed(text: String) {
         composeRule.onAllNodesWithText(text)[0].assertIsDisplayed()
     }

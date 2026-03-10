@@ -34,6 +34,7 @@ import java.util.*
 @Composable
 fun MonthlySummaryScreen(
     paddingValues: PaddingValues,
+    onNavigateToExpenseList: (String) -> Unit = {},
     viewModel: MonthlySummaryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -52,7 +53,7 @@ fun MonthlySummaryScreen(
         },
         onDeleteExpense = { viewModel.onDeleteExpense(it.id) },
         onShowAllCategories = {},
-        onShowAllExpenses = {}
+        onShowAllExpenses = { onNavigateToExpenseList(uiState.month) }
     )
 }
 

@@ -19,6 +19,7 @@ import com.tinygc.okodukai.presentation.screen.BudgetSettingScreen
 import com.tinygc.okodukai.presentation.screen.CategoryManagementScreen
 import com.tinygc.okodukai.presentation.screen.DefaultCategorySettingScreen
 import com.tinygc.okodukai.presentation.screen.ExpenseEntryScreen
+import com.tinygc.okodukai.presentation.screen.ExpenseListScreen
 import com.tinygc.okodukai.presentation.screen.IncomeManagementScreen
 import com.tinygc.okodukai.presentation.screen.ManagementHubScreen
 import com.tinygc.okodukai.presentation.screen.MonthlyHistoryScreen
@@ -76,7 +77,18 @@ fun MainScreen() {
                 ExpenseEntryScreen(paddingValues = paddingValues)
             }
             composable(BottomNavDestination.Summary.route) {
-                MonthlySummaryScreen(paddingValues = paddingValues)
+                MonthlySummaryScreen(
+                    paddingValues = paddingValues,
+                    onNavigateToExpenseList = { month -> navController.navigate("expense_list/$month") }
+                )
+            }
+            composable("expense_list/{month}") { backStackEntry ->
+                val month = backStackEntry.arguments?.getString("month") ?: ""
+                ExpenseListScreen(
+                    paddingValues = paddingValues,
+                    month = month,
+                    onBack = { navController.popBackStack() }
+                )
             }
             composable(BottomNavDestination.Management.route) {
                 ManagementHubScreen(
