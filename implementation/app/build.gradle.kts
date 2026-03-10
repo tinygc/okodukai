@@ -82,6 +82,9 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
 
+    // Drag & Drop Reorder
+    implementation("sh.calvin.reorderable:reorderable:3.0.0")
+
     // DataStore
     implementation(libs.datastore.preferences)
 

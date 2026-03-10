@@ -4,11 +4,13 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.tinygc.okodukai.data.local.dao.BudgetDao
 import com.tinygc.okodukai.data.local.dao.CategoryDao
+import com.tinygc.okodukai.data.local.dao.CategoryOrderDao
 import com.tinygc.okodukai.data.local.dao.ExpenseDao
 import com.tinygc.okodukai.data.local.dao.IncomeDao
 import com.tinygc.okodukai.data.local.dao.TemplateDao
 import com.tinygc.okodukai.data.local.entity.BudgetEntity
 import com.tinygc.okodukai.data.local.entity.CategoryEntity
+import com.tinygc.okodukai.data.local.entity.CategoryOrderEntity
 import com.tinygc.okodukai.data.local.entity.ExpenseEntity
 import com.tinygc.okodukai.data.local.entity.IncomeEntity
 import com.tinygc.okodukai.data.local.entity.TemplateEntity
@@ -22,9 +24,10 @@ import com.tinygc.okodukai.data.local.entity.TemplateEntity
         ExpenseEntity::class,
         IncomeEntity::class,
         CategoryEntity::class,
-        TemplateEntity::class
+        TemplateEntity::class,
+        CategoryOrderEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class OkodukaiDatabase : RoomDatabase() {
@@ -34,6 +37,7 @@ abstract class OkodukaiDatabase : RoomDatabase() {
     abstract fun incomeDao(): IncomeDao
     abstract fun categoryDao(): CategoryDao
     abstract fun templateDao(): TemplateDao
+    abstract fun categoryOrderDao(): CategoryOrderDao
 
     companion object {
         const val DATABASE_NAME = "okodukai_database"

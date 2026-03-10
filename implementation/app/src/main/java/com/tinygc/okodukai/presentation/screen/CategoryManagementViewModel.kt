@@ -5,10 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.tinygc.okodukai.domain.model.Category
 import com.tinygc.okodukai.domain.usecase.category.AddCategoryUseCase
 import com.tinygc.okodukai.domain.usecase.category.DeleteCategoryUseCase
-import com.tinygc.okodukai.domain.usecase.category.GetAllCategoriesUseCase
+import com.tinygc.okodukai.domain.usecase.category.GetOrderedParentCategoriesUseCase
+import com.tinygc.okodukai.domain.usecase.category.GetOrderedSubCategoriesUseCase
+import com.tinygc.okodukai.domain.usecase.category.UpdateCategoryOrderUseCase
 import com.tinygc.okodukai.domain.usecase.category.UpdateCategoryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,11 +22,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CategoryManagementViewModel @Inject constructor(
-    private val getAllCategoriesUseCase: GetAllCategoriesUseCase,
     private val addCategoryUseCase: AddCategoryUseCase,
     private val updateCategoryUseCase: UpdateCategoryUseCase,
     private val deleteCategoryUseCase: DeleteCategoryUseCase,
-    private val initializeDefaultDataUseCase: com.tinygc.okodukai.domain.usecase.setup.InitializeDefaultDataUseCase
+    private val initializeDefaultDataUseCase: com.tinygc.okodukai.domain.usecase.setup.InitializeDefaultDataUseCase,
+    private val getOrderedParentCategoriesUseCase: GetOrderedParentCategoriesUseCase,
+    private val getOrderedSubCategoriesUseCase: GetOrderedSubCategoriesUseCase,
+    private val updateCategoryOrderUseCase: UpdateCategoryOrderUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CategoryManagementUiState())
@@ -31,6 +36,7 @@ class CategoryManagementViewModel @Inject constructor(
 
     private val eventChannel = Channel<CategoryManagementEvent>(Channel.BUFFERED)
     val events = eventChannel.receiveAsFlow()
+    private val subCategoryObserveJobs = mutableMapOf<String, Job>()
 
     init {
         observeCategories()
@@ -68,6 +74,28 @@ class CategoryManagementViewModel @Inject constructor(
         }
     }
 
+    fun reorderParentCategories(categoryIdsInOrder: List<String>) {
+        viewModelScope.launch {
+            val result = updateCategoryOrderUseCase(categoryIdsInOrder = categoryIdsInOrder, parentId = null)
+            if (result.isSuccess) {
+                sendEvent(CategoryManagementEvent.ShowToast("並び順を保存しました"))
+            } else {
+                sendEvent(CategoryManagementEvent.ShowToast("並び順の保存に失敗しました"))
+            }
+        }
+    }
+
+    fun reorderSubCategories(parentId: String, categoryIdsInOrder: List<String>) {
+        viewModelScope.launch {
+            val result = updateCategoryOrderUseCase(categoryIdsInOrder = categoryIdsInOrder, parentId = parentId)
+            if (result.isSuccess) {
+                sendEvent(CategoryManagementEvent.ShowToast("並び順を保存しました"))
+            } else {
+                sendEvent(CategoryManagementEvent.ShowToast("並び順の保存に失敗しました"))
+            }
+        }
+    }
+
     fun resetToDefaults() {
         viewModelScope.launch {
             _uiState.update { it.copy(isResetting = true) }
@@ -83,9 +111,11 @@ class CategoryManagementViewModel @Inject constructor(
 
     private fun saveCategory(name: String, parentId: String?) {
         if (name.isBlank()) {
-            sendEvent(CategoryManagementEvent.ShowToast(
-                if (parentId == null) "カテゴリ名を入力してください" else "サブカテゴリ名を入力してください"
-            ))
+            sendEvent(
+                CategoryManagementEvent.ShowToast(
+                    if (parentId == null) "カテゴリ名を入力してください" else "サブカテゴリ名を入力してください"
+                )
+            )
             return
         }
         viewModelScope.launch {
@@ -103,15 +133,38 @@ class CategoryManagementViewModel @Inject constructor(
 
     private fun observeCategories() {
         viewModelScope.launch {
-            getAllCategoriesUseCase.observe().collect { categories ->
-                val parents = categories.filter { it.parentId == null }
-                val subByParent = categories
-                    .filter { it.parentId != null }
-                    .groupBy { it.parentId!! }
+            getOrderedParentCategoriesUseCase.observe().collect { parents ->
+                val parentIds = parents.map { it.id }.toSet()
+
+                // 親一覧から外れた監視を停止
+                val removedParentIds = subCategoryObserveJobs.keys - parentIds
+                removedParentIds.forEach { removedId ->
+                    subCategoryObserveJobs.remove(removedId)?.cancel()
+                }
+
+                // 新しい親カテゴリのサブカテゴリ監視を開始
+                parents.forEach { parent ->
+                    if (!subCategoryObserveJobs.containsKey(parent.id)) {
+                        val job = viewModelScope.launch {
+                            getOrderedSubCategoriesUseCase.observe(parent.id).collect { subs ->
+                                _uiState.update { state ->
+                                    state.copy(
+                                        subCategoriesByParentId = state.subCategoriesByParentId.toMutableMap().apply {
+                                            put(parent.id, subs)
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                        subCategoryObserveJobs[parent.id] = job
+                    }
+                }
+
                 _uiState.update {
                     it.copy(
                         parents = parents,
-                        subCategoriesByParentId = subByParent
+                        subCategoriesByParentId = it.subCategoriesByParentId
+                            .filterKeys { key -> key in parentIds }
                     )
                 }
             }

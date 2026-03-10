@@ -206,4 +206,33 @@ class FakeCategoryRepository : CategoryRepository {
     override fun observeAllCategories(): Flow<List<Category>> {
         return flowOf(categories)
     }
+
+    override suspend fun updateCategoryOrder(
+        categoryIdsInOrder: List<String>,
+        parentId: String?
+    ): Result<Unit> {
+        val scoped = categories.filter { it.parentId == parentId }
+        val orderMap = categoryIdsInOrder.withIndex().associate { it.value to it.index }
+        val reordered = scoped.sortedBy { orderMap[it.id] ?: Int.MAX_VALUE }
+
+        categories.removeAll(scoped.toSet())
+        categories.addAll(reordered)
+        return Result.success(Unit)
+    }
+
+    override suspend fun getParentCategoriesOrdered(): Result<List<Category>> {
+        return Result.success(categories.filter { it.parentId == null }.sortedBy { it.createdAt })
+    }
+
+    override fun observeParentCategoriesOrdered(): Flow<List<Category>> {
+        return flowOf(categories.filter { it.parentId == null }.sortedBy { it.createdAt })
+    }
+
+    override suspend fun getSubCategoriesOrdered(parentId: String): Result<List<Category>> {
+        return Result.success(categories.filter { it.parentId == parentId }.sortedBy { it.createdAt })
+    }
+
+    override fun observeSubCategoriesOrdered(parentId: String): Flow<List<Category>> {
+        return flowOf(categories.filter { it.parentId == parentId }.sortedBy { it.createdAt })
+    }
 }

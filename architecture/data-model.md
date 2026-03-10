@@ -88,12 +88,31 @@
 
 ---
 
+### 6. category_orders
+| カラム | 型 | 制約 | 説明 |
+|---|---|---|---|
+| id | TEXT | PK | UUID |
+| category_id | TEXT | NOT NULL, UNIQUE | categories.id |
+| parent_id | TEXT | NULL | 並び順のスコープ（NULL=親カテゴリ、値あり=サブカテゴリ） |
+| display_order | INTEGER | NOT NULL | 表示順序（0以上の整数） |
+| created_at | TEXT | NOT NULL | 作成日時 |
+| updated_at | TEXT | NOT NULL | 更新日時 |
+
+インデックス:
+- UNIQUE(category_id)
+- idx_category_orders_parent (parent_id)
+- idx_category_orders_display (parent_id, display_order)
+
+---
+
 ## リレーション
 - categories.parent_id -> categories.id (サブカテゴリ)
 - expenses.category_id -> categories.id
 - expenses.sub_category_id -> categories.id
 - templates.category_id -> categories.id
 - templates.sub_category_id -> categories.id
+- category_orders.category_id -> categories.id (UNIQUE)
+- category_orders.parent_id -> categories.id (親カテゴリと同じ値、またはNULL)
 
 ---
 
@@ -105,6 +124,14 @@
 - カテゴリ（parent_id = NULL）は最大10件
 - サブカテゴリは各カテゴリごとに最大10件
 - 例: 「食費」（カテゴリ）→「食事」「飲料」「その他」（サブカテゴリ）
+
+### カテゴリの並び順管理
+- カテゴリの並び順はcategory_ordersテーブルで管理
+- parent_idで並び順のスコープを管理（NULL=親カテゴリ間、値あり=サブカテゴリ間）
+- display_orderで表示順を制御（小さい値ほど上に表示）
+- カテゴリ新規作成時は既存の最大display_order + 1で追加
+- category_ordersにレコードがない場合は、categories.created_atの昇順で表示
+- 並び替え時はparent_idが同じカテゴリのみ対象とする
 
 ### カテゴリ数上限制約の実装
 - 10件制約はData層（DB層またはRepository層）で検証する

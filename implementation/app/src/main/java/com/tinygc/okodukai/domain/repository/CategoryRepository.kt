@@ -62,4 +62,32 @@ interface CategoryRepository {
      * 全カテゴリを監視
      */
     fun observeAllCategories(): Flow<List<Category>>
+
+    /**
+     * カテゴリの並び順を更新（複数一括）
+     * @param categoryIdsInOrder 並び順に並べ替え済みのカテゴリIDリスト
+     * @param parentId 親カテゴリID（NULLの場合は親カテゴリ間の並び順を更新）
+     */
+    suspend fun updateCategoryOrder(categoryIdsInOrder: List<String>, parentId: String? = null): Result<Unit>
+
+    /**
+     * 親カテゴリを並び順を考慮して取得
+     * 並び順が設定されていない場合は作成日時順で返す
+     */
+    suspend fun getParentCategoriesOrdered(): Result<List<Category>>
+
+    /**
+     * 親カテゴリを並び順を考慮して監視
+     */
+    fun observeParentCategoriesOrdered(): Flow<List<Category>>
+
+    /**
+     * 指定親カテゴリのサブカテゴリを並び順を考慮して取得
+     */
+    suspend fun getSubCategoriesOrdered(parentId: String): Result<List<Category>>
+
+    /**
+     * 指定親カテゴリのサブカテゴリを並び順を考慮して監視
+     */
+    fun observeSubCategoriesOrdered(parentId: String): Flow<List<Category>>
 }

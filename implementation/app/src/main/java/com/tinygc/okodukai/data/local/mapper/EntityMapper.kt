@@ -2,11 +2,13 @@ package com.tinygc.okodukai.data.local.mapper
 
 import com.tinygc.okodukai.data.local.entity.BudgetEntity
 import com.tinygc.okodukai.data.local.entity.CategoryEntity
+import com.tinygc.okodukai.data.local.entity.CategoryOrderEntity
 import com.tinygc.okodukai.data.local.entity.ExpenseEntity
 import com.tinygc.okodukai.data.local.entity.IncomeEntity
 import com.tinygc.okodukai.data.local.entity.TemplateEntity
 import com.tinygc.okodukai.domain.model.Budget
 import com.tinygc.okodukai.domain.model.Category
+import com.tinygc.okodukai.domain.model.CategoryOrder
 import com.tinygc.okodukai.domain.model.Expense
 import com.tinygc.okodukai.domain.model.Income
 import com.tinygc.okodukai.domain.model.Template
@@ -89,6 +91,25 @@ fun Category.toEntity(): CategoryEntity = CategoryEntity(
     id = id,
     name = name,
     parentId = parentId,
+    createdAt = createdAt,
+    updatedAt = updatedAt
+)
+
+// CategoryOrder
+fun CategoryOrderEntity.toDomain(): CategoryOrder = CategoryOrder(
+    id = id,
+    categoryId = categoryId,
+    parentId = parentId,
+    displayOrder = displayOrder,
+    createdAt = createdAt,
+    updatedAt = updatedAt
+)
+
+fun CategoryOrder.toEntity(): CategoryOrderEntity = CategoryOrderEntity(
+    id = id,
+    categoryId = categoryId,
+    parentId = parentId,
+    displayOrder = displayOrder,
     createdAt = createdAt,
     updatedAt = updatedAt
 )
