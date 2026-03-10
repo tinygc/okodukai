@@ -14,6 +14,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -41,9 +44,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.tinygc.okodukai.domain.model.Category
+import sh.calvin.reorderable.ReorderableCollectionItemScope
 import sh.calvin.reorderable.ReorderableColumn
 import sh.calvin.reorderable.ReorderableItem
-import sh.calvin.reorderable.ReorderableListItemScope
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @Composable
 fun CategoryManagementScreen(
@@ -58,6 +62,24 @@ fun CategoryManagementScreen(
     var showAddSubDialogForParentId by remember { mutableStateOf<String?>(null) }
     var editCategory by remember { mutableStateOf<Category?>(null) }
 
+    var displayParents by remember { mutableStateOf(uiState.parents) }
+    var isParentDragging by remember { mutableStateOf(false) }
+    val lazyListState = rememberLazyListState()
+    val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
+        val fromIdx = from.index - 1
+        val toIdx = to.index - 1
+        if (fromIdx < 0 || toIdx < 0 || fromIdx >= displayParents.size || toIdx >= displayParents.size) return@rememberReorderableLazyListState
+        displayParents = displayParents.toMutableList().apply {
+            add(toIdx, removeAt(fromIdx))
+        }
+    }
+
+    LaunchedEffect(uiState.parents) {
+        if (!isParentDragging) {
+            displayParents = uiState.parents
+        }
+    }
+
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
@@ -68,72 +90,78 @@ fun CategoryManagementScreen(
         }
     }
 
-    Column(
+    LazyColumn(
+        state = lazyListState,
         modifier = Modifier
             .fillMaxSize()
             .padding(paddingValues)
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = "カテゴリ管理",
-                style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
-                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
-            )
-            TextButton(onClick = onBack) {
-                Text(
-                    text = "戻る",
-                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp)
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Button(onClick = { showAddParentDialog = true }) {
-                Text(
-                    text = "カテゴリ追加",
-                    style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp)
-                )
-            }
-            Button(onClick = { viewModel.resetToDefaults() }) {
-                Text(
-                    text = "リセット",
-                    style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        ReorderableColumn(
-            list = uiState.parents,
-            onSettle = { fromIndex, toIndex ->
-                val reordered = uiState.parents.toMutableList().apply {
-                    add(toIndex, removeAt(fromIndex))
+        item(key = "header") {
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "カテゴリ管理",
+                        style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                    )
+                    TextButton(onClick = onBack) {
+                        Text(
+                            text = "戻る",
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp)
+                        )
+                    }
                 }
-                viewModel.reorderParentCategories(reordered.map { it.id })
-            },
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) { index, parent, isDragging ->
-            ReorderableItem {
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(onClick = { showAddParentDialog = true }) {
+                        Text(
+                            text = "カテゴリ追加",
+                            style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp)
+                        )
+                    }
+                    Button(onClick = { viewModel.resetToDefaults() }) {
+                        Text(
+                            text = "リセット",
+                            style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp)
+                        )
+                    }
+                }
+            }
+        }
+
+        itemsIndexed(
+            items = displayParents,
+            key = { _, parent -> parent.id }
+        ) { index, parent ->
+            ReorderableItem(
+                state = reorderableLazyListState,
+                key = parent.id
+            ) { isDragging ->
+                val scope = this
                 SlideInItem(delayMillis = index * 50) {
                     val subs = uiState.subCategoriesByParentId[parent.id].orEmpty()
                     CategoryGroupItem(
-                        scope = this@ReorderableItem,
+                        scope = scope,
                         parent = parent,
                         subCategories = subs,
                         isDragging = isDragging,
                         onAddSub = { showAddSubDialogForParentId = parent.id },
                         onEdit = { editCategory = it },
                         onDelete = { viewModel.deleteCategory(it) },
-                        onReorderSub = { ids -> viewModel.reorderSubCategories(parent.id, ids) }
+                        onReorderSub = { ids -> viewModel.reorderSubCategories(parent.id, ids) },
+                        onParentDragStarted = { isParentDragging = true },
+                        onParentDragStopped = {
+                            isParentDragging = false
+                            viewModel.reorderParentCategories(displayParents.map { it.id })
+                        }
                     )
                 }
             }
@@ -177,14 +205,16 @@ fun CategoryManagementScreen(
 
 @Composable
 private fun CategoryGroupItem(
-    scope: ReorderableListItemScope,
+    scope: ReorderableCollectionItemScope,
     parent: Category,
     subCategories: List<Category>,
     isDragging: Boolean,
     onAddSub: () -> Unit,
     onEdit: (Category) -> Unit,
     onDelete: (Category) -> Unit,
-    onReorderSub: (List<String>) -> Unit
+    onReorderSub: (List<String>) -> Unit,
+    onParentDragStarted: () -> Unit,
+    onParentDragStopped: () -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -209,7 +239,10 @@ private fun CategoryGroupItem(
                         modifier = with(scope) {
                             Modifier
                                 .padding(12.dp)
-                                .draggableHandle()
+                                .draggableHandle(
+                                    onDragStarted = { onParentDragStarted() },
+                                    onDragStopped = { onParentDragStopped() }
+                                )
                         }
                     )
                     IconButton(onClick = { onEdit(parent) }) {
