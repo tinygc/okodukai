@@ -1,6 +1,9 @@
 # Github Copilot
 .github/
 
+# VS Code workspace settings
+.vscode/
+
 # Gradle files
 .gradle/
 build/
