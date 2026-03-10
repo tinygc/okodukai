@@ -9,6 +9,7 @@ data class Template(
     val categoryId: String,
     val subCategoryId: String? = null,
     val amount: Int,
+    val sortOrder: Int = 0,
     val createdAt: String,
     val updatedAt: String
 )

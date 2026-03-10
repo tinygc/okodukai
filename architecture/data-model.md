@@ -80,11 +80,13 @@
 | category_id | TEXT | NOT NULL | categories.id |
 | sub_category_id | TEXT | NULL | categories.id |
 | amount | INTEGER | NOT NULL | 固定金額 |
+| display_order | INTEGER | NOT NULL | 表示順序（0以上の整数） |
 | created_at | TEXT | NOT NULL | 作成日時 |
 | updated_at | TEXT | NOT NULL | 更新日時 |
 
 インデックス:
 - idx_templates_category (category_id)
+- idx_templates_display_order (display_order)
 
 ---
 

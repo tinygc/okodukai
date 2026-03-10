@@ -7,6 +7,7 @@ import com.tinygc.okodukai.domain.usecase.category.GetAllCategoriesUseCase
 import com.tinygc.okodukai.domain.usecase.template.AddTemplateUseCase
 import com.tinygc.okodukai.domain.usecase.template.DeleteTemplateUseCase
 import com.tinygc.okodukai.domain.usecase.template.GetAllTemplatesUseCase
+import com.tinygc.okodukai.domain.usecase.template.ReorderTemplateUseCase
 import com.tinygc.okodukai.domain.usecase.template.UpdateTemplateUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -24,6 +25,7 @@ class TemplateManagementViewModel @Inject constructor(
     private val addTemplateUseCase: AddTemplateUseCase,
     private val updateTemplateUseCase: UpdateTemplateUseCase,
     private val deleteTemplateUseCase: DeleteTemplateUseCase,
+    private val reorderTemplateUseCase: ReorderTemplateUseCase,
     private val getAllCategoriesUseCase: GetAllCategoriesUseCase
 ) : ViewModel() {
 
@@ -84,6 +86,15 @@ class TemplateManagementViewModel @Inject constructor(
                 sendEvent(TemplateManagementEvent.ShowToast("テンプレを削除しました"))
             } else {
                 sendEvent(TemplateManagementEvent.ShowToast("保存に失敗しました"))
+            }
+        }
+    }
+
+    fun reorderTemplates(templateIds: List<String>) {
+        viewModelScope.launch {
+            val result = reorderTemplateUseCase(templateIds)
+            if (!result.isSuccess) {
+                sendEvent(TemplateManagementEvent.ShowToast("並び替えに失敗しました"))
             }
         }
     }

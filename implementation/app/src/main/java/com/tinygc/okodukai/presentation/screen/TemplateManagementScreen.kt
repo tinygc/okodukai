@@ -11,10 +11,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
@@ -45,6 +47,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.tinygc.okodukai.domain.model.Category
 import com.tinygc.okodukai.domain.model.Template
+import sh.calvin.reorderable.ReorderableCollectionItemScope
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @Composable
 fun TemplateManagementScreen(
@@ -57,6 +62,28 @@ fun TemplateManagementScreen(
 
     var showAddDialog by remember { mutableStateOf(false) }
     var editTemplate by remember { mutableStateOf<Template?>(null) }
+
+    var displayTemplates by remember { mutableStateOf(uiState.templates) }
+    var isTemplateDragging by remember { mutableStateOf(false) }
+    val lazyListState = rememberLazyListState()
+    val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
+        // ヘッダー item は index=0、テンプレートは index=1 から始まる
+        val fromIdx = from.index - 1
+        val toIdx = to.index - 1
+        // 境界値チェック（ヘッダーのドラッグは無視）
+        if (fromIdx < 0 || toIdx < 0 || fromIdx >= displayTemplates.size || toIdx >= displayTemplates.size) {
+            return@rememberReorderableLazyListState
+        }
+        displayTemplates = displayTemplates.toMutableList().apply {
+            add(toIdx, removeAt(fromIdx))
+        }
+    }
+
+    LaunchedEffect(uiState.templates) {
+        if (!isTemplateDragging) {
+            displayTemplates = uiState.templates
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
@@ -101,39 +128,69 @@ fun TemplateManagementScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(uiState.templates) { template ->
-                val categoryName = uiState.categories.find { it.id == template.categoryId }?.name ?: "未設定"
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
+        LazyColumn(
+            state = lazyListState,
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            item(key = "header") {
+                // Header区間は空（ボタンはColumn内に配置）
+            }
+
+            itemsIndexed(
+                items = displayTemplates,
+                key = { _, template -> template.id }
+            ) { index, template ->
+                ReorderableItem(
+                    state = reorderableLazyListState,
+                    key = template.id
+                ) { isDragging ->
+                    val categoryName = uiState.categories.find { it.id == template.categoryId }?.name ?: "未設定"
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                        color = if (isDragging) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant
                     ) {
-                        Text(
-                            text = "${template.name} (${categoryName}) ${template.amount}円",
-                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Row {
-                            IconButton(onClick = { editTemplate = template }) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "${template.name} (${categoryName}) ${template.amount}円",
+                                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Row {
                                 androidx.compose.material3.Icon(
-                                    Icons.Filled.Edit,
-                                    contentDescription = "編集",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    Icons.Filled.DragHandle,
+                                    contentDescription = "並び替え",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier
+                                        .padding(12.dp)
+                                        .draggableHandle(
+                                            onDragStarted = { isTemplateDragging = true },
+                                            onDragStopped = {
+                                                isTemplateDragging = false
+                                                viewModel.reorderTemplates(displayTemplates.map { it.id })
+                                            }
+                                        )
                                 )
-                            }
-                            IconButton(onClick = { viewModel.deleteTemplate(template) }) {
-                                androidx.compose.material3.Icon(
-                                    Icons.Filled.Delete,
-                                    contentDescription = "削除",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                IconButton(onClick = { editTemplate = template }) {
+                                    androidx.compose.material3.Icon(
+                                        Icons.Filled.Edit,
+                                        contentDescription = "編集",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                IconButton(onClick = { viewModel.deleteTemplate(template) }) {
+                                    androidx.compose.material3.Icon(
+                                        Icons.Filled.Delete,
+                                        contentDescription = "削除",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                             }
                         }
                     }

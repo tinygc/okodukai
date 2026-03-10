@@ -121,6 +121,7 @@ fun TemplateEntity.toDomain(): Template = Template(
     categoryId = categoryId,
     subCategoryId = subCategoryId,
     amount = amount,
+    sortOrder = displayOrder,
     createdAt = createdAt,
     updatedAt = updatedAt
 )
@@ -131,6 +132,7 @@ fun Template.toEntity(): TemplateEntity = TemplateEntity(
     categoryId = categoryId,
     subCategoryId = subCategoryId,
     amount = amount,
+    displayOrder = sortOrder,
     createdAt = createdAt,
     updatedAt = updatedAt
 )

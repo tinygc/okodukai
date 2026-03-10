@@ -93,6 +93,30 @@ object DatabaseModule {
         }
     }
 
+    /**
+     * マイグレーション v2 -> v3
+     * templatesテーブルにdisplay_orderカラムを追加
+     */
+    private val MIGRATION_2_3 = object : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE templates ADD COLUMN display_order INTEGER NOT NULL DEFAULT 0")
+            db.execSQL("CREATE INDEX IF NOT EXISTS index_templates_display_order ON templates(display_order)")
+            
+            // 既存テンプレートを作成日時順でバックフィル
+            db.execSQL(
+                """
+                UPDATE templates
+                SET display_order = (
+                    SELECT COUNT(*)
+                    FROM templates t2
+                    WHERE (t2.created_at < templates.created_at 
+                           OR (t2.created_at = templates.created_at AND t2.id <= templates.id))
+                ) - 1
+                """.trimIndent()
+            )
+        }
+    }
+
     @Provides
     @Singleton
     fun provideOkodukaiDatabase(
@@ -103,7 +127,7 @@ object DatabaseModule {
             OkodukaiDatabase::class.java,
             OkodukaiDatabase.DATABASE_NAME
         )
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .build()
     }
 

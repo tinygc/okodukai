@@ -14,7 +14,8 @@ import androidx.room.PrimaryKey
     tableName = "templates",
     indices = [
         Index(value = ["category_id"]),
-        Index(value = ["sub_category_id"])
+        Index(value = ["sub_category_id"]),
+        Index(value = ["display_order"])
     ],
     foreignKeys = [
         ForeignKey(
@@ -47,6 +48,9 @@ data class TemplateEntity(
 
     @ColumnInfo(name = "amount")
     val amount: Int, // 固定金額（円）
+
+    @ColumnInfo(name = "display_order")
+    val displayOrder: Int = 0, // 表示順序
 
     @ColumnInfo(name = "created_at")
     val createdAt: String,

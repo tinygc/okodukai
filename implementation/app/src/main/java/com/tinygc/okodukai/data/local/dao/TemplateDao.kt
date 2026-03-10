@@ -42,13 +42,13 @@ interface TemplateDao {
     /**
      * 全テンプレートを取得
      */
-    @Query("SELECT * FROM templates ORDER BY created_at ASC")
+    @Query("SELECT * FROM templates ORDER BY display_order ASC, created_at ASC")
     fun getAllFlow(): Flow<List<TemplateEntity>>
 
     /**
      * 全テンプレートを取得
      */
-    @Query("SELECT * FROM templates ORDER BY created_at ASC")
+    @Query("SELECT * FROM templates ORDER BY display_order ASC, created_at ASC")
     suspend fun getAll(): List<TemplateEntity>
 
     /**
@@ -60,6 +60,6 @@ interface TemplateDao {
     /**
      * 指定カテゴリのテンプレートを取得
      */
-    @Query("SELECT * FROM templates WHERE category_id = :categoryId ORDER BY created_at ASC")
+    @Query("SELECT * FROM templates WHERE category_id = :categoryId ORDER BY display_order ASC, created_at ASC")
     suspend fun getByCategoryId(categoryId: String): List<TemplateEntity>
 }

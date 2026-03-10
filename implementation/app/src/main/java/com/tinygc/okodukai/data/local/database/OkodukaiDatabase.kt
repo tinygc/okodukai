@@ -27,7 +27,7 @@ import com.tinygc.okodukai.data.local.entity.TemplateEntity
         TemplateEntity::class,
         CategoryOrderEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class OkodukaiDatabase : RoomDatabase() {
