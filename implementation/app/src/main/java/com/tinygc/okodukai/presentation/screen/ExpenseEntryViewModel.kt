@@ -183,10 +183,7 @@ class ExpenseEntryViewModel @Inject constructor(
     private fun clearInput() {
         _uiState.update {
             it.copy(
-                amountInput = "",
-                selectedCategoryId = null,
-                selectedSubCategoryId = null,
-                subCategories = emptyList()
+                amountInput = ""
             )
         }
     }
