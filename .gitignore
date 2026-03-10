@@ -1,3 +1,6 @@
+# Github Copilot
+.github/
+
 # Gradle files
 .gradle/
 build/
