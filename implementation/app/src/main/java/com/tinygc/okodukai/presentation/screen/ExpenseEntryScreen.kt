@@ -231,7 +231,29 @@ private fun NormalEntryContent(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             
-            // 第1行: 100, 300, 500
+            // 第1行: 1, 10, 50
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                QuickAmountButton(
+                    amount = 1,
+                    onClick = { viewModel.onQuickAmountAdd(1) },
+                    modifier = Modifier.weight(1f)
+                )
+                QuickAmountButton(
+                    amount = 10,
+                    onClick = { viewModel.onQuickAmountAdd(10) },
+                    modifier = Modifier.weight(1f)
+                )
+                QuickAmountButton(
+                    amount = 50,
+                    onClick = { viewModel.onQuickAmountAdd(50) },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            // 第2行: 100, 300, 500
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -253,7 +275,7 @@ private fun NormalEntryContent(
                 )
             }
             
-            // 第2行: 1000, 3000, リセット
+            // 第3行: 1000, 3000, リセット
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
