@@ -34,8 +34,7 @@ import java.util.*
 @Composable
 fun MonthlySummaryScreen(
     paddingValues: PaddingValues,
-    viewModel: MonthlySummaryViewModel = hiltViewModel(),
-    onEditExpense: (ExpenseItem) -> Unit = {}
+    viewModel: MonthlySummaryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val currentMonth = remember {
@@ -48,7 +47,9 @@ fun MonthlySummaryScreen(
         onNextMonth = { viewModel.onMonthChange(getNextMonth(uiState.month)) },
         onBackToCurrentMonth = { viewModel.onMonthChange(currentMonth) },
         showBackToCurrentMonth = uiState.month != currentMonth,
-        onEditExpense = onEditExpense,
+        onUpdateExpense = { expenseItem, date, amount, memo ->
+            viewModel.onUpdateExpense(expenseItem, date, amount, memo)
+        },
         onDeleteExpense = { viewModel.onDeleteExpense(it.id) },
         onShowAllCategories = {},
         onShowAllExpenses = {}
@@ -63,7 +64,7 @@ internal fun MonthlySummaryContent(
     onNextMonth: () -> Unit,
     onBackToCurrentMonth: () -> Unit,
     showBackToCurrentMonth: Boolean,
-    onEditExpense: (ExpenseItem) -> Unit,
+    onUpdateExpense: (ExpenseItem, String, Int, String?) -> Unit,
     onDeleteExpense: (ExpenseItem) -> Unit,
     onShowAllCategories: () -> Unit,
     onShowAllExpenses: () -> Unit
@@ -72,6 +73,11 @@ internal fun MonthlySummaryContent(
 
     var showDeleteDialog by remember { mutableStateOf(false) }
     var expenseToDelete by remember { mutableStateOf<ExpenseItem?>(null) }
+    var showEditDialog by remember { mutableStateOf(false) }
+    var expenseToEdit by remember { mutableStateOf<ExpenseItem?>(null) }
+    var editDateInput by remember { mutableStateOf("") }
+    var editAmountInput by remember { mutableStateOf("") }
+    var editMemoInput by remember { mutableStateOf("") }
 
     LazyColumn(
         modifier = Modifier
@@ -175,7 +181,13 @@ internal fun MonthlySummaryContent(
                 ExpenseListItem(
                     expense = expense,
                     currencyFormatter = currencyFormatter,
-                    onEdit = { onEditExpense(expense) },
+                    onEdit = {
+                        expenseToEdit = expense
+                        editDateInput = expense.date
+                        editAmountInput = expense.amount.toString()
+                        editMemoInput = expense.memo.orEmpty()
+                        showEditDialog = true
+                    },
                     onDelete = {
                         expenseToDelete = expense
                         showDeleteDialog = true
@@ -249,6 +261,55 @@ internal fun MonthlySummaryContent(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("キャンセル")
+                }
+            }
+        )
+    }
+
+    if (showEditDialog && expenseToEdit != null) {
+        AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            title = { Text("支出を編集") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = editDateInput,
+                        onValueChange = { editDateInput = it },
+                        label = { Text("日付 (YYYY-MM-DD)") },
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = editAmountInput,
+                        onValueChange = { editAmountInput = it.filter { ch -> ch.isDigit() } },
+                        label = { Text("金額") },
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = editMemoInput,
+                        onValueChange = { editMemoInput = it },
+                        label = { Text("メモ（任意）") },
+                        singleLine = true
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val amount = editAmountInput.toIntOrNull()
+                        if (editDateInput.isBlank() || amount == null || amount <= 0) {
+                            return@TextButton
+                        }
+                        onUpdateExpense(expenseToEdit!!, editDateInput, amount, editMemoInput.ifBlank { null })
+                        showEditDialog = false
+                        expenseToEdit = null
+                    }
+                ) {
+                    Text("保存")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditDialog = false }) {
                     Text("キャンセル")
                 }
             }

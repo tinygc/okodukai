@@ -3,6 +3,7 @@ package com.tinygc.okodukai.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tinygc.okodukai.domain.usecase.expense.DeleteExpenseUseCase
+import com.tinygc.okodukai.domain.usecase.expense.UpdateExpenseUseCase
 import com.tinygc.okodukai.domain.usecase.expense.GetExpensesByMonthUseCase
 import com.tinygc.okodukai.domain.usecase.summary.GetMonthlySummaryUseCase
 import com.tinygc.okodukai.domain.usecase.category.GetCategoryByIdUseCase
@@ -19,6 +20,7 @@ import javax.inject.Inject
 class MonthlySummaryViewModel @Inject constructor(
     private val getMonthlySummaryUseCase: GetMonthlySummaryUseCase,
     private val deleteExpenseUseCase: DeleteExpenseUseCase,
+    private val updateExpenseUseCase: UpdateExpenseUseCase,
     private val getCategoryByIdUseCase: GetCategoryByIdUseCase
 ) : ViewModel() {
 
@@ -133,6 +135,27 @@ class MonthlySummaryViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     errorMessage = "支出の削除に失敗しました: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun onUpdateExpense(expenseItem: ExpenseItem, date: String, amount: Int, memo: String?) {
+        viewModelScope.launch {
+            val result = updateExpenseUseCase(
+                expenseId = expenseItem.id,
+                date = date,
+                amount = amount,
+                categoryId = expenseItem.categoryId,
+                subCategoryId = expenseItem.subCategoryId,
+                memo = memo
+            )
+
+            if (result.isSuccess) {
+                loadSummary(_uiState.value.month)
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = result.exceptionOrNull()?.message ?: "支出の更新に失敗しました"
                 )
             }
         }

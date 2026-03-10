@@ -5,11 +5,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
 import com.tinygc.okodukai.presentation.viewmodel.CategoryTotalUiModel
 import com.tinygc.okodukai.presentation.viewmodel.ExpenseItem
 import com.tinygc.okodukai.presentation.viewmodel.MonthlySummaryUiState
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -60,7 +63,7 @@ class MonthlySummaryScreenTest {
                     onNextMonth = {},
                     onBackToCurrentMonth = {},
                     showBackToCurrentMonth = false,
-                    onEditExpense = {},
+                    onUpdateExpense = { _, _, _, _ -> },
                     onDeleteExpense = {},
                     onShowAllCategories = {},
                     onShowAllExpenses = {}
@@ -98,7 +101,7 @@ class MonthlySummaryScreenTest {
                     onNextMonth = {},
                     onBackToCurrentMonth = {},
                     showBackToCurrentMonth = false,
-                    onEditExpense = {},
+                    onUpdateExpense = { _, _, _, _ -> },
                     onDeleteExpense = {},
                     onShowAllCategories = {},
                     onShowAllExpenses = {}
@@ -108,6 +111,60 @@ class MonthlySummaryScreenTest {
 
         assertTextDisplayed("データがありません")
         assertTextDisplayed("今月の支出はありません")
+    }
+
+    @Test
+    fun editIconClickThenSaveCallsOnUpdateExpense() {
+        val uiState = MonthlySummaryUiState(
+            month = "2026-02",
+            budget = 50000,
+            totalExpense = 1200,
+            remainingBudget = 48800,
+            topCategories = listOf(
+                CategoryTotalUiModel("c1", "食費", 1200)
+            ),
+            otherTotal = 0,
+            expenseItems = listOf(
+                ExpenseItem(
+                    id = "e1",
+                    date = "2026-02-01",
+                    amount = 1200,
+                    categoryId = "c1",
+                    subCategoryId = null,
+                    categoryName = "食費",
+                    subCategoryName = null,
+                    memo = null,
+                    isUncategorized = false,
+                    createdAt = "",
+                    updatedAt = ""
+                )
+            )
+        )
+
+        var editedExpenseId: String? = null
+
+        composeRule.setContent {
+            MaterialTheme {
+                MonthlySummaryContent(
+                    paddingValues = androidx.compose.foundation.layout.PaddingValues(0.dp),
+                    uiState = uiState,
+                    onPreviousMonth = {},
+                    onNextMonth = {},
+                    onBackToCurrentMonth = {},
+                    showBackToCurrentMonth = false,
+                    onUpdateExpense = { expense: ExpenseItem, _: String, _: Int, _: String? -> editedExpenseId = expense.id },
+                    onDeleteExpense = {},
+                    onShowAllCategories = {},
+                    onShowAllExpenses = {}
+                )
+            }
+        }
+
+        composeRule.onNodeWithContentDescription("編集").performClick()
+        composeRule.onNodeWithText("保存").performClick()
+        composeRule.runOnIdle {
+            assertEquals("e1", editedExpenseId)
+        }
     }
 
     private fun assertTextDisplayed(text: String) {

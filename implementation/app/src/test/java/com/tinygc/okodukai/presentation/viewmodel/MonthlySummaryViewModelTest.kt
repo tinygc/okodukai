@@ -9,6 +9,7 @@ import com.tinygc.okodukai.domain.usecase.category.FakeCategoryRepository
 import com.tinygc.okodukai.domain.usecase.category.GetCategoryByIdUseCase
 import com.tinygc.okodukai.domain.usecase.expense.DeleteExpenseUseCase
 import com.tinygc.okodukai.domain.usecase.expense.FakeExpenseRepository
+import com.tinygc.okodukai.domain.usecase.expense.UpdateExpenseUseCase
 import com.tinygc.okodukai.domain.usecase.summary.GetMonthlySummaryUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -39,6 +40,7 @@ class MonthlySummaryViewModelTest {
     private lateinit var fakeCategoryRepository: FakeCategoryRepository
     private lateinit var getMonthlySummaryUseCase: GetMonthlySummaryUseCase
     private lateinit var deleteExpenseUseCase: DeleteExpenseUseCase
+    private lateinit var updateExpenseUseCase: UpdateExpenseUseCase
     private lateinit var getCategoryByIdUseCase: GetCategoryByIdUseCase
     private lateinit var viewModel: MonthlySummaryViewModel
 
@@ -54,6 +56,7 @@ class MonthlySummaryViewModelTest {
             fakeCategoryRepository
         )
         deleteExpenseUseCase = DeleteExpenseUseCase(fakeExpenseRepository)
+        updateExpenseUseCase = UpdateExpenseUseCase(fakeExpenseRepository)
         getCategoryByIdUseCase = GetCategoryByIdUseCase(fakeCategoryRepository)
     }
 
@@ -74,6 +77,7 @@ class MonthlySummaryViewModelTest {
         viewModel = MonthlySummaryViewModel(
             getMonthlySummaryUseCase,
             deleteExpenseUseCase,
+            updateExpenseUseCase,
             getCategoryByIdUseCase
         )
         advanceUntilIdle()
@@ -103,6 +107,7 @@ class MonthlySummaryViewModelTest {
         viewModel = MonthlySummaryViewModel(
             getMonthlySummaryUseCase,
             deleteExpenseUseCase,
+            updateExpenseUseCase,
             getCategoryByIdUseCase
         )
         advanceUntilIdle()
@@ -133,6 +138,7 @@ class MonthlySummaryViewModelTest {
         viewModel = MonthlySummaryViewModel(
             getMonthlySummaryUseCase,
             deleteExpenseUseCase,
+            updateExpenseUseCase,
             getCategoryByIdUseCase
         )
         advanceUntilIdle()
@@ -166,6 +172,7 @@ class MonthlySummaryViewModelTest {
         viewModel = MonthlySummaryViewModel(
             getMonthlySummaryUseCase,
             deleteExpenseUseCase,
+            updateExpenseUseCase,
             getCategoryByIdUseCase
         )
         advanceUntilIdle()
@@ -202,6 +209,7 @@ class MonthlySummaryViewModelTest {
         viewModel = MonthlySummaryViewModel(
             getMonthlySummaryUseCase,
             deleteExpenseUseCase,
+            updateExpenseUseCase,
             getCategoryByIdUseCase
         )
         advanceUntilIdle()
@@ -242,6 +250,7 @@ class MonthlySummaryViewModelTest {
         viewModel = MonthlySummaryViewModel(
             getMonthlySummaryUseCase,
             deleteExpenseUseCase,
+            updateExpenseUseCase,
             getCategoryByIdUseCase
         )
         advanceUntilIdle()
@@ -259,11 +268,49 @@ class MonthlySummaryViewModelTest {
     }
 
     @Test
+    fun `支出を更新すると月次サマリーが再読込されること`() = runTest {
+        // Given
+        val currentMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"))
+        val category = Category("cat1", "食費", null, "", "")
+        fakeCategoryRepository.addCategory(category)
+        fakeExpenseRepository.expenses.add(
+            Expense("e1", "$currentMonth-01", 1000, "cat1", null, null, false, "", "")
+        )
+
+        viewModel = MonthlySummaryViewModel(
+            getMonthlySummaryUseCase,
+            deleteExpenseUseCase,
+            updateExpenseUseCase,
+            getCategoryByIdUseCase
+        )
+        advanceUntilIdle()
+
+        val target = viewModel.uiState.value.expenseItems.first()
+
+        // When
+        viewModel.onUpdateExpense(
+            expenseItem = target,
+            date = "$currentMonth-02",
+            amount = 1500,
+            memo = "更新メモ"
+        )
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertEquals(1500, state.totalExpense)
+        assertEquals("$currentMonth-02", state.expenseItems.first().date)
+        assertEquals(1500, state.expenseItems.first().amount)
+        assertEquals("更新メモ", state.expenseItems.first().memo)
+    }
+
+    @Test
     fun `空月の判定が正しく行われること`() = runTest {
         // Given
         viewModel = MonthlySummaryViewModel(
             getMonthlySummaryUseCase,
             deleteExpenseUseCase,
+            updateExpenseUseCase,
             getCategoryByIdUseCase
         )
         advanceUntilIdle()
@@ -273,3 +320,4 @@ class MonthlySummaryViewModelTest {
         assertTrue(state.isEmptyMonth)
     }
 }
+
