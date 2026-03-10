@@ -7,12 +7,14 @@ import com.tinygc.okodukai.data.local.dao.CategoryDao
 import com.tinygc.okodukai.data.local.dao.CategoryOrderDao
 import com.tinygc.okodukai.data.local.dao.ExpenseDao
 import com.tinygc.okodukai.data.local.dao.IncomeDao
+import com.tinygc.okodukai.data.local.dao.SavingGoalDao
 import com.tinygc.okodukai.data.local.dao.TemplateDao
 import com.tinygc.okodukai.data.local.entity.BudgetEntity
 import com.tinygc.okodukai.data.local.entity.CategoryEntity
 import com.tinygc.okodukai.data.local.entity.CategoryOrderEntity
 import com.tinygc.okodukai.data.local.entity.ExpenseEntity
 import com.tinygc.okodukai.data.local.entity.IncomeEntity
+import com.tinygc.okodukai.data.local.entity.SavingGoalEntity
 import com.tinygc.okodukai.data.local.entity.TemplateEntity
 
 /**
@@ -23,11 +25,12 @@ import com.tinygc.okodukai.data.local.entity.TemplateEntity
         BudgetEntity::class,
         ExpenseEntity::class,
         IncomeEntity::class,
+        SavingGoalEntity::class,
         CategoryEntity::class,
         TemplateEntity::class,
         CategoryOrderEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class OkodukaiDatabase : RoomDatabase() {
@@ -35,6 +38,7 @@ abstract class OkodukaiDatabase : RoomDatabase() {
     abstract fun budgetDao(): BudgetDao
     abstract fun expenseDao(): ExpenseDao
     abstract fun incomeDao(): IncomeDao
+    abstract fun savingGoalDao(): SavingGoalDao
     abstract fun categoryDao(): CategoryDao
     abstract fun templateDao(): TemplateDao
     abstract fun categoryOrderDao(): CategoryOrderDao

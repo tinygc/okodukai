@@ -9,6 +9,7 @@ import com.tinygc.okodukai.data.local.dao.CategoryDao
 import com.tinygc.okodukai.data.local.dao.CategoryOrderDao
 import com.tinygc.okodukai.data.local.dao.ExpenseDao
 import com.tinygc.okodukai.data.local.dao.IncomeDao
+import com.tinygc.okodukai.data.local.dao.SavingGoalDao
 import com.tinygc.okodukai.data.local.dao.TemplateDao
 import com.tinygc.okodukai.data.local.database.OkodukaiDatabase
 import dagger.Module
@@ -117,6 +118,29 @@ object DatabaseModule {
         }
     }
 
+    /**
+     * マイグレーション v3 -> v4
+     * saving_goalsテーブルを追加
+     */
+    private val MIGRATION_3_4 = object : Migration(3, 4) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS saving_goals (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    name TEXT NOT NULL,
+                    target_amount INTEGER NOT NULL,
+                    is_active INTEGER NOT NULL,
+                    display_order INTEGER NOT NULL,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+                """.trimIndent()
+            )
+            db.execSQL("CREATE INDEX IF NOT EXISTS index_saving_goals_display_order ON saving_goals(display_order)")
+        }
+    }
+
     @Provides
     @Singleton
     fun provideOkodukaiDatabase(
@@ -127,7 +151,7 @@ object DatabaseModule {
             OkodukaiDatabase::class.java,
             OkodukaiDatabase.DATABASE_NAME
         )
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
             .build()
     }
 
@@ -144,6 +168,11 @@ object DatabaseModule {
     @Provides
     fun provideIncomeDao(database: OkodukaiDatabase): IncomeDao {
         return database.incomeDao()
+    }
+
+    @Provides
+    fun provideSavingGoalDao(database: OkodukaiDatabase): SavingGoalDao {
+        return database.savingGoalDao()
     }
 
     @Provides

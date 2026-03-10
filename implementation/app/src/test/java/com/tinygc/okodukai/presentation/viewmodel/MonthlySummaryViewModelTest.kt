@@ -10,6 +10,9 @@ import com.tinygc.okodukai.domain.usecase.category.GetCategoryByIdUseCase
 import com.tinygc.okodukai.domain.usecase.expense.DeleteExpenseUseCase
 import com.tinygc.okodukai.domain.usecase.expense.FakeExpenseRepository
 import com.tinygc.okodukai.domain.usecase.expense.UpdateExpenseUseCase
+import com.tinygc.okodukai.domain.usecase.income.FakeIncomeRepository
+import com.tinygc.okodukai.domain.usecase.saving.FakeSavingGoalRepository
+import com.tinygc.okodukai.domain.usecase.saving.GetSavingsProgressUseCase
 import com.tinygc.okodukai.domain.usecase.summary.GetMonthlySummaryUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -38,7 +41,10 @@ class MonthlySummaryViewModelTest {
     private lateinit var fakeBudgetRepository: FakeBudgetRepository
     private lateinit var fakeExpenseRepository: FakeExpenseRepository
     private lateinit var fakeCategoryRepository: FakeCategoryRepository
+    private lateinit var fakeIncomeRepository: FakeIncomeRepository
+    private lateinit var fakeSavingGoalRepository: FakeSavingGoalRepository
     private lateinit var getMonthlySummaryUseCase: GetMonthlySummaryUseCase
+    private lateinit var getSavingsProgressUseCase: GetSavingsProgressUseCase
     private lateinit var deleteExpenseUseCase: DeleteExpenseUseCase
     private lateinit var updateExpenseUseCase: UpdateExpenseUseCase
     private lateinit var getCategoryByIdUseCase: GetCategoryByIdUseCase
@@ -49,11 +55,19 @@ class MonthlySummaryViewModelTest {
         fakeBudgetRepository = FakeBudgetRepository()
         fakeExpenseRepository = FakeExpenseRepository()
         fakeCategoryRepository = FakeCategoryRepository()
+        fakeIncomeRepository = FakeIncomeRepository()
+        fakeSavingGoalRepository = FakeSavingGoalRepository()
         
         getMonthlySummaryUseCase = GetMonthlySummaryUseCase(
             fakeBudgetRepository,
             fakeExpenseRepository,
             fakeCategoryRepository
+        )
+        getSavingsProgressUseCase = GetSavingsProgressUseCase(
+            fakeBudgetRepository,
+            fakeExpenseRepository,
+            fakeIncomeRepository,
+            fakeSavingGoalRepository
         )
         deleteExpenseUseCase = DeleteExpenseUseCase(fakeExpenseRepository)
         updateExpenseUseCase = UpdateExpenseUseCase(fakeExpenseRepository)
@@ -78,7 +92,8 @@ class MonthlySummaryViewModelTest {
             getMonthlySummaryUseCase,
             deleteExpenseUseCase,
             updateExpenseUseCase,
-            getCategoryByIdUseCase
+            getCategoryByIdUseCase,
+            getSavingsProgressUseCase
         )
         advanceUntilIdle()
 
@@ -108,7 +123,8 @@ class MonthlySummaryViewModelTest {
             getMonthlySummaryUseCase,
             deleteExpenseUseCase,
             updateExpenseUseCase,
-            getCategoryByIdUseCase
+            getCategoryByIdUseCase,
+            getSavingsProgressUseCase
         )
         advanceUntilIdle()
 
@@ -139,7 +155,8 @@ class MonthlySummaryViewModelTest {
             getMonthlySummaryUseCase,
             deleteExpenseUseCase,
             updateExpenseUseCase,
-            getCategoryByIdUseCase
+            getCategoryByIdUseCase,
+            getSavingsProgressUseCase
         )
         advanceUntilIdle()
 
@@ -173,7 +190,8 @@ class MonthlySummaryViewModelTest {
             getMonthlySummaryUseCase,
             deleteExpenseUseCase,
             updateExpenseUseCase,
-            getCategoryByIdUseCase
+            getCategoryByIdUseCase,
+            getSavingsProgressUseCase
         )
         advanceUntilIdle()
 
@@ -210,7 +228,8 @@ class MonthlySummaryViewModelTest {
             getMonthlySummaryUseCase,
             deleteExpenseUseCase,
             updateExpenseUseCase,
-            getCategoryByIdUseCase
+            getCategoryByIdUseCase,
+            getSavingsProgressUseCase
         )
         advanceUntilIdle()
 
@@ -251,7 +270,8 @@ class MonthlySummaryViewModelTest {
             getMonthlySummaryUseCase,
             deleteExpenseUseCase,
             updateExpenseUseCase,
-            getCategoryByIdUseCase
+            getCategoryByIdUseCase,
+            getSavingsProgressUseCase
         )
         advanceUntilIdle()
 
@@ -281,7 +301,8 @@ class MonthlySummaryViewModelTest {
             getMonthlySummaryUseCase,
             deleteExpenseUseCase,
             updateExpenseUseCase,
-            getCategoryByIdUseCase
+            getCategoryByIdUseCase,
+            getSavingsProgressUseCase
         )
         advanceUntilIdle()
 
@@ -311,7 +332,8 @@ class MonthlySummaryViewModelTest {
             getMonthlySummaryUseCase,
             deleteExpenseUseCase,
             updateExpenseUseCase,
-            getCategoryByIdUseCase
+            getCategoryByIdUseCase,
+            getSavingsProgressUseCase
         )
         advanceUntilIdle()
 

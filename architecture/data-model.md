@@ -107,6 +107,22 @@
 
 ---
 
+### 7. saving_goals
+| カラム | 型 | 制約 | 説明 |
+|---|---|---|---|
+| id | TEXT | PK | UUID |
+| name | TEXT | NOT NULL | 目標名 |
+| target_amount | INTEGER | NOT NULL | 目標金額 |
+| is_active | INTEGER | NOT NULL | 0/1 |
+| display_order | INTEGER | NOT NULL | 表示順序（0以上の整数） |
+| created_at | TEXT | NOT NULL | 作成日時 |
+| updated_at | TEXT | NOT NULL | 更新日時 |
+
+インデックス:
+- idx_saving_goals_display_order (display_order)
+
+---
+
 ## リレーション
 - categories.parent_id -> categories.id (サブカテゴリ)
 - expenses.category_id -> categories.id
@@ -151,3 +167,5 @@
 - expensesはカテゴリ未設定の保存を許可する（未分類フラグで管理）
 - テンプレも最大10件まで
 - 月次集計はdateのYYYY-MMでフィルタする
+- 貯金目標進捗の原資は「予算 + 臨時収入 - 支出（分類済み）」を月次で累積した値を使用する
+- 月次差分がマイナスの場合もそのまま翌月へ繰り越す

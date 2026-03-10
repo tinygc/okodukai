@@ -5,12 +5,14 @@ import com.tinygc.okodukai.data.local.entity.CategoryEntity
 import com.tinygc.okodukai.data.local.entity.CategoryOrderEntity
 import com.tinygc.okodukai.data.local.entity.ExpenseEntity
 import com.tinygc.okodukai.data.local.entity.IncomeEntity
+import com.tinygc.okodukai.data.local.entity.SavingGoalEntity
 import com.tinygc.okodukai.data.local.entity.TemplateEntity
 import com.tinygc.okodukai.domain.model.Budget
 import com.tinygc.okodukai.domain.model.Category
 import com.tinygc.okodukai.domain.model.CategoryOrder
 import com.tinygc.okodukai.domain.model.Expense
 import com.tinygc.okodukai.domain.model.Income
+import com.tinygc.okodukai.domain.model.SavingGoal
 import com.tinygc.okodukai.domain.model.Template
 
 /**
@@ -133,6 +135,27 @@ fun Template.toEntity(): TemplateEntity = TemplateEntity(
     subCategoryId = subCategoryId,
     amount = amount,
     displayOrder = sortOrder,
+    createdAt = createdAt,
+    updatedAt = updatedAt
+)
+
+// SavingGoal
+fun SavingGoalEntity.toDomain(): SavingGoal = SavingGoal(
+    id = id,
+    name = name,
+    targetAmount = targetAmount,
+    isActive = isActive,
+    displayOrder = displayOrder,
+    createdAt = createdAt,
+    updatedAt = updatedAt
+)
+
+fun SavingGoal.toEntity(): SavingGoalEntity = SavingGoalEntity(
+    id = id,
+    name = name,
+    targetAmount = targetAmount,
+    isActive = isActive,
+    displayOrder = displayOrder,
     createdAt = createdAt,
     updatedAt = updatedAt
 )

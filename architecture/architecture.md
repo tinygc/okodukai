@@ -74,6 +74,11 @@
 - 月ごとの予算額を設定・変更
 - 当月がデフォルト、過去月の編集は任意
 
+### 9. 貯金目標管理
+- 貯金目標の作成・編集・削除
+- 達成モード（個別達成/合計達成）の切替
+- 繰越残高と目標進捗の確認
+
 ---
 
 ## 入力チャネル
@@ -91,6 +96,7 @@
 - 管理 -> 臨時収入管理
 - 管理 -> 月別履歴
 - 管理 -> 予算設定
+- 管理 -> 貯金目標管理
 - 月次サマリ -> カテゴリ別一覧
 - 月次サマリ -> 支出一覧
 - 支出一覧 -> 支出編集
@@ -135,6 +141,9 @@
 ### Income
 - id, date, amount, memo
 
+### SavingGoal
+- id, name, targetAmount, isActive, displayOrder
+
 ### Category
 - id, name, parentId (サブカテゴリ用)
 
@@ -148,6 +157,8 @@
 - UpdateExpense
 - CreateIncome
 - UpdateIncome
+- GetSavingsProgress
+- SaveSavingGoal
 - CreateTemplate
 - UpdateTemplate
 - GetMonthlySummary
@@ -168,6 +179,8 @@
 ### フェーズ2（入力効率化）
 - CreateIncome
 - UpdateIncome
+- GetSavingsProgress
+- SaveSavingGoal
 
 ### フェーズ3（周辺機能）
 - ウィジェット機能の拡張

@@ -184,4 +184,8 @@ class FakeExpenseRepository : ExpenseRepository {
             .sumOf { it.amount }
         return flowOf(total)
     }
+
+    override suspend fun getAllExpenses(): Result<List<Expense>> {
+        return Result.success(expenses)
+    }
 }

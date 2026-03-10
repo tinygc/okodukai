@@ -51,4 +51,8 @@ class ExpenseRepositoryImpl @Inject constructor(
     override fun observeTotalExpenseByMonth(month: String): Flow<Int> {
         return expenseDao.getTotalByMonthFlow(month)
     }
+
+    override suspend fun getAllExpenses(): Result<List<Expense>> = runCatching {
+        expenseDao.getAll().map { it.toDomain() }
+    }
 }

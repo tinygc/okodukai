@@ -1,5 +1,6 @@
 package com.tinygc.okodukai.presentation.viewmodel
 
+import com.tinygc.okodukai.domain.model.GoalAchievementMode
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -16,6 +17,13 @@ data class MonthlySummaryUiState(
     val otherTotal: Int = 0,
     val expenseItems: List<ExpenseItem> = emptyList(),
     val totalIncome: Int? = null,
+    val carryOverBalance: Int = 0,
+    val savingsAvailable: Int = 0,
+    val goalAchievementMode: GoalAchievementMode = GoalAchievementMode.INDIVIDUAL,
+    val savingGoals: List<SavingGoalProgressUiModel> = emptyList(),
+    val totalSavingTarget: Int = 0,
+    val totalSavingRemaining: Int = 0,
+    val isSavingGoalAchieved: Boolean = false,
     val isEmptyMonth: Boolean = false,
     val isLoading: Boolean = false,
     val errorMessage: String? = null
@@ -45,4 +53,12 @@ data class ExpenseItem(
     val isUncategorized: Boolean,
     val createdAt: String,
     val updatedAt: String
+)
+
+data class SavingGoalProgressUiModel(
+    val id: String,
+    val name: String,
+    val targetAmount: Int,
+    val remainingAmount: Int,
+    val isAchieved: Boolean
 )

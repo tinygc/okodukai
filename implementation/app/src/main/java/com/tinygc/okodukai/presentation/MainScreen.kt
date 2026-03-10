@@ -24,6 +24,7 @@ import com.tinygc.okodukai.presentation.screen.IncomeManagementScreen
 import com.tinygc.okodukai.presentation.screen.ManagementHubScreen
 import com.tinygc.okodukai.presentation.screen.MonthlyHistoryScreen
 import com.tinygc.okodukai.presentation.screen.MonthlySummaryScreen
+import com.tinygc.okodukai.presentation.screen.SavingGoalManagementScreen
 import com.tinygc.okodukai.presentation.screen.TemplateManagementScreen
 
 @Composable
@@ -98,7 +99,8 @@ fun MainScreen() {
                     onNavigateToBudget = { navController.navigate("budget_setting") },
                     onNavigateToIncome = { navController.navigate("income_management") },
                     onNavigateToHistory = { navController.navigate("monthly_history") },
-                    onNavigateToDefaultCategory = { navController.navigate("default_category_setting") }
+                    onNavigateToDefaultCategory = { navController.navigate("default_category_setting") },
+                    onNavigateToSavingGoal = { navController.navigate("saving_goal_management") }
                 )
             }
             composable("category_management") {
@@ -133,6 +135,12 @@ fun MainScreen() {
             }
             composable("default_category_setting") {
                 DefaultCategorySettingScreen(
+                    paddingValues = paddingValues,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable("saving_goal_management") {
+                SavingGoalManagementScreen(
                     paddingValues = paddingValues,
                     onBack = { navController.popBackStack() }
                 )

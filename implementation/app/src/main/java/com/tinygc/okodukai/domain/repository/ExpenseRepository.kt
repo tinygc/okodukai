@@ -52,4 +52,9 @@ interface ExpenseRepository {
      * 指定月の支出合計金額を監視（未分類除外）
      */
     fun observeTotalExpenseByMonth(month: String): Flow<Int>
+
+    /**
+     * 全支出を取得（未分類含む）
+     */
+    suspend fun getAllExpenses(): Result<List<Expense>>
 }

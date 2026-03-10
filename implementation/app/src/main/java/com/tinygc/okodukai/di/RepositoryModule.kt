@@ -4,11 +4,13 @@ import com.tinygc.okodukai.data.repository.BudgetRepositoryImpl
 import com.tinygc.okodukai.data.repository.CategoryRepositoryImpl
 import com.tinygc.okodukai.data.repository.ExpenseRepositoryImpl
 import com.tinygc.okodukai.data.repository.IncomeRepositoryImpl
+import com.tinygc.okodukai.data.repository.SavingGoalRepositoryImpl
 import com.tinygc.okodukai.data.repository.TemplateRepositoryImpl
 import com.tinygc.okodukai.domain.repository.BudgetRepository
 import com.tinygc.okodukai.domain.repository.CategoryRepository
 import com.tinygc.okodukai.domain.repository.ExpenseRepository
 import com.tinygc.okodukai.domain.repository.IncomeRepository
+import com.tinygc.okodukai.domain.repository.SavingGoalRepository
 import com.tinygc.okodukai.domain.repository.TemplateRepository
 import dagger.Binds
 import dagger.Module
@@ -40,6 +42,12 @@ abstract class RepositoryModule {
     abstract fun bindIncomeRepository(
         incomeRepositoryImpl: IncomeRepositoryImpl
     ): IncomeRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSavingGoalRepository(
+        savingGoalRepositoryImpl: SavingGoalRepositoryImpl
+    ): SavingGoalRepository
 
     @Binds
     @Singleton

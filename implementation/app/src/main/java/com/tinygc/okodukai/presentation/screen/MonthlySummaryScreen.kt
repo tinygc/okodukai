@@ -23,9 +23,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.tinygc.okodukai.domain.model.GoalAchievementMode
 import com.tinygc.okodukai.presentation.viewmodel.MonthlySummaryViewModel
 import com.tinygc.okodukai.presentation.viewmodel.ExpenseItem
 import com.tinygc.okodukai.presentation.viewmodel.MonthlySummaryUiState
+import com.tinygc.okodukai.presentation.viewmodel.SavingGoalProgressUiModel
 import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -105,6 +107,19 @@ internal fun MonthlySummaryContent(
                 totalExpense = uiState.totalExpense ?: 0,
                 remainingBudget = uiState.remainingBudget ?: 0,
                 totalIncome = uiState.totalIncome ?: 0,
+                currencyFormatter = currencyFormatter
+            )
+        }
+
+        item {
+            SavingsProgressCard(
+                carryOverBalance = uiState.carryOverBalance,
+                savingsAvailable = uiState.savingsAvailable,
+                goalAchievementMode = uiState.goalAchievementMode,
+                savingGoals = uiState.savingGoals,
+                totalSavingTarget = uiState.totalSavingTarget,
+                totalSavingRemaining = uiState.totalSavingRemaining,
+                isSavingGoalAchieved = uiState.isSavingGoalAchieved,
                 currencyFormatter = currencyFormatter
             )
         }
@@ -453,6 +468,81 @@ private fun BudgetSummaryCard(
 
             if (totalIncome > 0) {
                 BudgetSubRow("臨時収入", totalIncome, currencyFormatter)
+            }
+        }
+    }
+}
+
+@Composable
+private fun SavingsProgressCard(
+    carryOverBalance: Int,
+    savingsAvailable: Int,
+    goalAchievementMode: GoalAchievementMode,
+    savingGoals: List<SavingGoalProgressUiModel>,
+    totalSavingTarget: Int,
+    totalSavingRemaining: Int,
+    isSavingGoalAchieved: Boolean,
+    currencyFormatter: NumberFormat
+) {
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp)),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "貯金目標",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = "繰越残高: ${currencyFormatter.format(carryOverBalance)}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = "目標に使える金額: ${currencyFormatter.format(savingsAvailable)}",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+
+            if (savingGoals.isEmpty()) {
+                Text(
+                    text = "貯金目標が未登録です",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                return@Column
+            }
+
+            when (goalAchievementMode) {
+                GoalAchievementMode.INDIVIDUAL -> {
+                    savingGoals.forEach { goal ->
+                        val status = if (goal.isAchieved) "達成" else "あと ${currencyFormatter.format(goal.remainingAmount)}"
+                        Text(
+                            text = "${goal.name}: ${status}",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+
+                GoalAchievementMode.TOTAL -> {
+                    val status = if (isSavingGoalAchieved) "達成" else "あと ${currencyFormatter.format(totalSavingRemaining)}"
+                    Text(
+                        text = "合計目標: ${currencyFormatter.format(totalSavingTarget)}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Text(
+                        text = "達成状況: $status",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
     }
