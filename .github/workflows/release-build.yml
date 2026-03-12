@@ -16,10 +16,10 @@ env:
         required: false
         type: string
       version_name:
-        description: "アプリのVersionName（空なら 0.1.1）"
+        description: "アプリのVersionName（空なら release_tag→0.1.1 の順で決定）"
         required: false
         type: string
-        default: "0.1.1"
+        default: ""
   push:
     tags:
       - "v*"
@@ -66,6 +66,9 @@ jobs:
             VERSION_NAME="${VERSION_NAME#v}"
           elif [ -n "${{ inputs.version_name }}" ]; then
             VERSION_NAME="${{ inputs.version_name }}"
+          elif [ -n "${{ inputs.release_tag }}" ]; then
+            VERSION_NAME="${{ inputs.release_tag }}"
+            VERSION_NAME="${VERSION_NAME#v}"
           else
             VERSION_NAME="0.1.1"
           fi
