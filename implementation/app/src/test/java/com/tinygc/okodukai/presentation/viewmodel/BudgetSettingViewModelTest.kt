@@ -18,11 +18,10 @@ import java.time.format.DateTimeFormatter
 /**
  * BudgetSettingViewModel のテスト
  * 
- * 検証項目（FR-1: 月単位の予算管理）：
+ * 検証項目（FR-1: 毎月固定の予算管理）：
  * - 予算が正確に保存されること
  * - 予算の読み込みが正常に動作すること
  * - エラーハンドリングが適切であること
- * - 月の切り替えが正常に動作すること
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class BudgetSettingViewModelTest {
@@ -55,7 +54,6 @@ class BudgetSettingViewModelTest {
 
         // Then
         val state = viewModel.uiState.value
-        assertEquals(currentMonth, state.month)
         assertEquals(50000, state.currentBudget)
         assertEquals("50000", state.budgetAmount)
         assertFalse(state.isLoading)
@@ -89,7 +87,7 @@ class BudgetSettingViewModelTest {
         // Then
         val state = viewModel.uiState.value
         assertEquals(50000, state.currentBudget)
-        assertEquals("予算を保存しました", state.successMessage)
+        assertEquals("毎月の予算を保存しました", state.successMessage)
         assertNull(state.errorMessage)
         assertFalse(state.isSaving)
     }
@@ -128,36 +126,6 @@ class BudgetSettingViewModelTest {
     }
 
     @Test
-    fun `月を切り替えると対応する予算が読み込まれること`() = runTest {
-        // Given
-        val jan = "2026-01"
-        val feb = "2026-02"
-        fakeBudgetRepository.addBudget(Budget("b1", jan, 30000, "", ""))
-        fakeBudgetRepository.addBudget(Budget("b2", feb, 50000, "", ""))
-        
-        viewModel = BudgetSettingViewModel(getBudgetByMonthUseCase, saveBudgetUseCase)
-        advanceUntilIdle()
-
-        // When
-        viewModel.onMonthChange(jan)
-        advanceUntilIdle()
-
-        // Then
-        val state1 = viewModel.uiState.value
-        assertEquals(jan, state1.month)
-        assertEquals(30000, state1.currentBudget)
-
-        // When
-        viewModel.onMonthChange(feb)
-        advanceUntilIdle()
-
-        // Then
-        val state2 = viewModel.uiState.value
-        assertEquals(feb, state2.month)
-        assertEquals(50000, state2.currentBudget)
-    }
-
-    @Test
     fun `予算額を変更するとUIStateが更新されること`() = runTest {
         // Given
         viewModel = BudgetSettingViewModel(getBudgetByMonthUseCase, saveBudgetUseCase)
@@ -190,32 +158,27 @@ class BudgetSettingViewModelTest {
         // Then
         val state = viewModel.uiState.value
         assertEquals(50000, state.currentBudget)
-        assertEquals("予算を保存しました", state.successMessage)
+        assertEquals("毎月の予算を保存しました", state.successMessage)
     }
 
     @Test
-    fun `複数の月で独立して予算を管理できること`() = runTest {
+    fun `複数回保存しても固定予算として1件更新されること`() = runTest {
         // Given
         viewModel = BudgetSettingViewModel(getBudgetByMonthUseCase, saveBudgetUseCase)
         advanceUntilIdle()
 
-        // 1月の予算を保存
-        viewModel.onMonthChange("2026-01")
-        advanceUntilIdle()
+        // 1回目を保存
         viewModel.onBudgetAmountChange("30000")
         viewModel.saveBudget()
         advanceUntilIdle()
 
-        // 2月の予算を保存
-        viewModel.onMonthChange("2026-02")
-        advanceUntilIdle()
+        // 2回目を保存
         viewModel.onBudgetAmountChange("40000")
         viewModel.saveBudget()
         advanceUntilIdle()
 
-        // Then: 保存が成功していること
-        assertEquals(2, fakeBudgetRepository.savedBudgets.size)
-        assertEquals(30000, fakeBudgetRepository.savedBudgets["2026-01"]?.amount)
-        assertEquals(40000, fakeBudgetRepository.savedBudgets["2026-02"]?.amount)
+        // Then: 固定予算のため1件のみ保持されること
+        assertEquals(1, fakeBudgetRepository.savedBudgets.size)
+        assertEquals(40000, fakeBudgetRepository.savedBudgets.values.first().amount)
     }
 }

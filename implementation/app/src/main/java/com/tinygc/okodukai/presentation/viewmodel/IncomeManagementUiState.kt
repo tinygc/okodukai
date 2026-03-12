@@ -1,14 +1,13 @@
 package com.tinygc.okodukai.presentation.viewmodel
 
 import com.tinygc.okodukai.domain.model.Income
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import com.tinygc.okodukai.domain.util.DateTimeUtil
 
 /**
  * 臨時収入管理画面のUI状態
  */
 data class IncomeManagementUiState(
-    val month: String = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM")),
+    val month: String = DateTimeUtil.getCurrentMonth(),
     val incomes: List<Income> = emptyList(),
     val totalIncome: Int = 0,
     val amountInput: String = "",

@@ -3,9 +3,13 @@ package com.tinygc.okodukai.domain.usecase.summary
 import com.tinygc.okodukai.domain.model.Budget
 import com.tinygc.okodukai.domain.model.Category
 import com.tinygc.okodukai.domain.model.Expense
+import com.tinygc.okodukai.domain.model.Income
+import com.tinygc.okodukai.domain.repository.IncomeRepository
 import com.tinygc.okodukai.domain.usecase.budget.FakeBudgetRepository
 import com.tinygc.okodukai.domain.usecase.category.FakeCategoryRepository
 import com.tinygc.okodukai.domain.usecase.expense.FakeExpenseRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Before
@@ -25,6 +29,7 @@ class GetMonthlySummaryUseCaseTest {
     private lateinit var fakeBudgetRepository: FakeBudgetRepository
     private lateinit var fakeExpenseRepository: FakeExpenseRepository
     private lateinit var fakeCategoryRepository: FakeCategoryRepository
+    private lateinit var fakeIncomeRepository: FakeIncomeRepository
     private lateinit var getMonthlySummaryUseCase: GetMonthlySummaryUseCase
 
     @Before
@@ -32,10 +37,12 @@ class GetMonthlySummaryUseCaseTest {
         fakeBudgetRepository = FakeBudgetRepository()
         fakeExpenseRepository = FakeExpenseRepository()
         fakeCategoryRepository = FakeCategoryRepository()
+        fakeIncomeRepository = FakeIncomeRepository()
         getMonthlySummaryUseCase = GetMonthlySummaryUseCase(
             fakeBudgetRepository,
             fakeExpenseRepository,
-            fakeCategoryRepository
+            fakeCategoryRepository,
+            fakeIncomeRepository
         )
     }
 
@@ -161,5 +168,138 @@ class GetMonthlySummaryUseCaseTest {
         assertEquals(50000, summary.remainingBudget)
         assertTrue(summary.categoryTotals.isEmpty())
         assertTrue(summary.expenses.isEmpty())
+    }
+
+    @Test
+    fun `前月の残予算が当月予算へ繰り越されること`() = runTest {
+        // Given
+        val budget = Budget("b1", "2026-01", 50000, "2026-01-01T00:00:00", "2026-01-01T00:00:00")
+        fakeBudgetRepository.addBudget(budget)
+
+        val category = Category("cat1", "食費", null, "", "")
+        fakeCategoryRepository.addCategory(category)
+
+        // 1月: 10,000円使用 -> 40,000円繰越
+        fakeExpenseRepository.expenses.add(
+            Expense("e1", "2026-01-10", 10000, "cat1", null, null, false, "", "")
+        )
+        // 2月: 20,000円使用
+        fakeExpenseRepository.expenses.add(
+            Expense("e2", "2026-02-05", 20000, "cat1", null, null, false, "", "")
+        )
+
+        // When
+        val result = getMonthlySummaryUseCase("2026-02")
+
+        // Then
+        assertTrue(result.isSuccess)
+        val summary = result.getOrThrow()
+        assertEquals(90000, summary.budget) // 50,000 + 40,000
+        assertEquals(20000, summary.totalExpense)
+        assertEquals(70000, summary.remainingBudget)
+    }
+
+    @Test
+    fun `予算不足は繰り越さず翌月繰越は0になること`() = runTest {
+        // Given
+        val budget = Budget("b1", "2026-01", 30000, "2026-01-01T00:00:00", "2026-01-01T00:00:00")
+        fakeBudgetRepository.addBudget(budget)
+
+        val category = Category("cat1", "食費", null, "", "")
+        fakeCategoryRepository.addCategory(category)
+
+        // 1月: 50,000円使用 -> -20,000円だが繰越は0
+        fakeExpenseRepository.expenses.add(
+            Expense("e1", "2026-01-10", 50000, "cat1", null, null, false, "", "")
+        )
+
+        // When
+        val result = getMonthlySummaryUseCase("2026-02")
+
+        // Then
+        assertTrue(result.isSuccess)
+        val summary = result.getOrThrow()
+        assertEquals(30000, summary.budget)
+        assertEquals(0, summary.totalExpense)
+        assertEquals(30000, summary.remainingBudget)
+    }
+
+    @Test
+    fun `予算設定が3月でも最古支出が2月なら2月を開始月として扱うこと`() = runTest {
+        // Given
+        // 3月に予算設定したケース
+        val budget = Budget("b1", "2026-03", 40000, "2026-03-01T00:00:00", "2026-03-01T00:00:00")
+        fakeBudgetRepository.addBudget(budget)
+
+        val category = Category("cat1", "食費", null, "", "")
+        fakeCategoryRepository.addCategory(category)
+
+        // 2月の支出データが存在
+        fakeExpenseRepository.expenses.add(
+            Expense("e1", "2026-02-10", 5000, "cat1", null, null, false, "", "")
+        )
+
+        // When
+        val result = getMonthlySummaryUseCase("2026-02")
+
+        // Then
+        assertTrue(result.isSuccess)
+        val summary = result.getOrThrow()
+        assertEquals(40000, summary.budget)
+        assertEquals(5000, summary.totalExpense)
+        assertEquals(35000, summary.remainingBudget)
+    }
+}
+
+class FakeIncomeRepository : IncomeRepository {
+    val incomes = mutableListOf<Income>()
+
+    override suspend fun saveIncome(income: Income): Result<Unit> {
+        val index = incomes.indexOfFirst { it.id == income.id }
+        if (index != -1) {
+            incomes[index] = income
+        } else {
+            incomes.add(income)
+        }
+        return Result.success(Unit)
+    }
+
+    override suspend fun getIncomeById(id: String): Result<Income?> {
+        return Result.success(incomes.find { it.id == id })
+    }
+
+    override suspend fun getAllIncomes(): Result<List<Income>> {
+        return Result.success(incomes)
+    }
+
+    override suspend fun deleteIncome(income: Income): Result<Unit> {
+        incomes.remove(income)
+        return Result.success(Unit)
+    }
+
+    override suspend fun getIncomesByMonth(month: String): Result<List<Income>> {
+        return Result.success(incomes.filter { it.date.startsWith(month) })
+    }
+
+    override suspend fun getTotalIncomeByMonth(month: String): Result<Int> {
+        val total = incomes
+            .filter { it.date.startsWith(month) }
+            .sumOf { it.amount }
+        return Result.success(total)
+    }
+
+    override fun observeIncomesByMonth(month: String): Flow<List<Income>> {
+        return flowOf(incomes.filter { it.date.startsWith(month) })
+    }
+
+    override fun observeTotalIncomeByMonth(month: String): Flow<Int> {
+        val total = incomes
+            .filter { it.date.startsWith(month) }
+            .sumOf { it.amount }
+        return flowOf(total)
+    }
+
+    override fun observeAllIncomes(): Flow<List<Income>> {
+        return flowOf(incomes)
     }
 }

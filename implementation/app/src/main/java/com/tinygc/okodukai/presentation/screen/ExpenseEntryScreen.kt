@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.collectAsState
+import com.tinygc.okodukai.domain.util.DateTimeUtil
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -153,7 +154,7 @@ private fun NormalEntryContent(
     var showDatePicker by remember { mutableStateOf(false) }
 
     // DatePickerの初期値を現在の日付から設定
-    val today = LocalDate.now()
+    val today = LocalDate.parse(DateTimeUtil.getCurrentDate())
     val initialMillis = today.atStartOfDay(ZoneId.of("Asia/Tokyo")).toInstant().toEpochMilli()
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
     val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -404,7 +405,7 @@ private fun TemplateEntryContent(
     var showDatePicker by remember { mutableStateOf(false) }
 
     // DatePickerの初期値を現在の日付から設定
-    val today = LocalDate.now()
+    val today = LocalDate.parse(DateTimeUtil.getCurrentDate())
     val initialMillis = today.atStartOfDay(ZoneId.of("Asia/Tokyo")).toInstant().toEpochMilli()
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
     val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")

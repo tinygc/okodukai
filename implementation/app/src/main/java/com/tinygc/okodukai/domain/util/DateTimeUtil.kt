@@ -1,42 +1,38 @@
 package com.tinygc.okodukai.domain.util
 
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 /**
  * 日付・時刻ユーティリティ
  */
 object DateTimeUtil {
-    
-    private const val DATE_FORMAT = "yyyy-MM-dd"
-    private const val MONTH_FORMAT = "yyyy-MM"
-    private const val DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss"
-    
-    private val dateFormatter = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
-    private val monthFormatter = SimpleDateFormat(MONTH_FORMAT, Locale.getDefault())
-    private val dateTimeFormatter = SimpleDateFormat(DATETIME_FORMAT, Locale.getDefault())
+
+    private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    private val monthFormatter = DateTimeFormatter.ofPattern("yyyy-MM")
+    private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
     
     /**
      * 現在日付を取得（YYYY-MM-DD）
      */
     fun getCurrentDate(): String {
-        return dateFormatter.format(Date())
+        return LocalDate.now().format(dateFormatter)
     }
     
     /**
      * 現在月を取得（YYYY-MM）
      */
     fun getCurrentMonth(): String {
-        return monthFormatter.format(Date())
+        return LocalDate.now().format(monthFormatter)
     }
     
     /**
      * 現在日時を取得（YYYY-MM-DDTHH:mm:ss）
      */
     fun getCurrentDateTime(): String {
-        return dateTimeFormatter.format(Date())
+        return LocalDateTime.now().format(dateTimeFormatter)
     }
     
     /**

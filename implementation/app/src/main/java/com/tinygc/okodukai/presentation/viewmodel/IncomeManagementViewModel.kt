@@ -3,6 +3,7 @@ package com.tinygc.okodukai.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tinygc.okodukai.domain.model.Income
+import com.tinygc.okodukai.domain.util.DateTimeUtil
 import com.tinygc.okodukai.domain.usecase.income.AddIncomeUseCase
 import com.tinygc.okodukai.domain.usecase.income.DeleteIncomeUseCase
 import com.tinygc.okodukai.domain.usecase.income.GetIncomesByMonthUseCase
@@ -12,8 +13,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 @HiltViewModel
@@ -28,7 +27,7 @@ class IncomeManagementViewModel @Inject constructor(
     val uiState: StateFlow<IncomeManagementUiState> = _uiState.asStateFlow()
 
     init {
-        val currentMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"))
+        val currentMonth = DateTimeUtil.getCurrentMonth()
         loadIncomes(currentMonth)
     }
 
@@ -67,7 +66,7 @@ class IncomeManagementViewModel @Inject constructor(
             showAddDialog = true,
             amountInput = "",
             memoInput = "",
-            dateInput = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+            dateInput = DateTimeUtil.getCurrentDate()
         )
     }
 

@@ -25,7 +25,7 @@ class GetSavingsProgressUseCase @Inject constructor(
         val goals = savingGoalRepository.getAllSavingGoals().getOrThrow()
             .filter { it.isActive }
             .sortedBy { it.displayOrder }
-        val budgetByMonth = budgets.associate { it.month to it.amount }
+        val recurringBudget = budgets.maxByOrNull { it.updatedAt }?.amount ?: 0
         val expenseByMonth = expenses
             .filter { !it.isUncategorized }
             .groupBy { it.date.substring(0, 7) }
@@ -34,13 +34,13 @@ class GetSavingsProgressUseCase @Inject constructor(
             .groupBy { it.date.substring(0, 7) }
             .mapValues { (_, v) -> v.sumOf { it.amount } }
 
-        val months = (budgetByMonth.keys + expenseByMonth.keys + incomeByMonth.keys + setOf(month))
+        val months = (expenseByMonth.keys + incomeByMonth.keys + setOf(month))
             .filter { it <= month }
             .sorted()
 
         var carryOver = 0
         months.forEach { current ->
-            val budget = budgetByMonth[current] ?: 0
+            val budget = recurringBudget
             val expense = expenseByMonth[current] ?: 0
             val income = incomeByMonth[current] ?: 0
             carryOver += budget + income - expense

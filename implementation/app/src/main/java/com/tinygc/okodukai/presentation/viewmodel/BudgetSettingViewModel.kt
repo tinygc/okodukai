@@ -2,7 +2,7 @@ package com.tinygc.okodukai.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tinygc.okodukai.domain.model.Budget
+import com.tinygc.okodukai.domain.util.DateTimeUtil
 import com.tinygc.okodukai.domain.usecase.budget.GetBudgetByMonthUseCase
 import com.tinygc.okodukai.domain.usecase.budget.SaveBudgetUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -10,8 +10,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 @HiltViewModel
@@ -24,20 +22,18 @@ class BudgetSettingViewModel @Inject constructor(
     val uiState: StateFlow<BudgetSettingUiState> = _uiState.asStateFlow()
 
     init {
-        val currentMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"))
-        loadBudget(currentMonth)
+        loadBudget()
     }
 
-    private fun loadBudget(month: String) {
+    private fun loadBudget() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             
             try {
-                val result = getBudgetByMonthUseCase(month)
+                val result = getBudgetByMonthUseCase(DateTimeUtil.getCurrentMonth())
                 val budget = result.getOrNull()
                 
                 _uiState.value = _uiState.value.copy(
-                    month = month,
                     currentBudget = budget?.amount,
                     budgetAmount = budget?.amount?.toString() ?: "",
                     isLoading = false
@@ -58,10 +54,6 @@ class BudgetSettingViewModel @Inject constructor(
         )
     }
 
-    fun onMonthChange(newMonth: String) {
-        loadBudget(newMonth)
-    }
-
     fun saveBudget() {
         viewModelScope.launch {
             val amount = _uiState.value.budgetAmount.toIntOrNull()
@@ -76,11 +68,11 @@ class BudgetSettingViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isSaving = true, errorMessage = null)
 
             try {
-                saveBudgetUseCase(_uiState.value.month, amount)
+                saveBudgetUseCase(DateTimeUtil.getCurrentMonth(), amount)
                 _uiState.value = _uiState.value.copy(
                     isSaving = false,
                     currentBudget = amount,
-                    successMessage = "予算を保存しました",
+                    successMessage = "毎月の予算を保存しました",
                     errorMessage = null
                 )
                 // 3秒後にサクセスメッセージをクリア

@@ -7,8 +7,8 @@ import javax.inject.Inject
 
 /**
  * 予算保存ユースケース（追加または更新）
- * 
- * 月ごとに一つの予算のみ保存可能
+ *
+ * 毎月固定額の予算を1件として保存する
  */
 class SaveBudgetUseCase @Inject constructor(
     private val budgetRepository: BudgetRepository
@@ -16,7 +16,7 @@ class SaveBudgetUseCase @Inject constructor(
     /**
      * 予算を保存する
      * 
-     * @param month 対象月（YYYY-MM）
+    * @param month 互換性維持のために受け取る月（YYYY-MM）
      * @param amount 予算金額
      * @return 保存結果
      */
@@ -33,15 +33,16 @@ class SaveBudgetUseCase @Inject constructor(
             return Result.failure(IllegalArgumentException("月の形式が正しくありません（YYYY-MM）"))
         }
         
-        // 既存の予算を確認
-        val existingBudgetResult = budgetRepository.getBudgetByMonth(month)
-        val existingBudget = existingBudgetResult.getOrNull()
+        // 仕様変更により、予算は毎月固定額を1件だけ保持する。
+        val existingBudget = budgetRepository.getAllBudgets()
+            .getOrThrow()
+            .maxByOrNull { it.updatedAt }
         
         val budget = if (existingBudget != null) {
             // 更新
             Budget(
                 id = existingBudget.id,
-                month = month,
+                month = existingBudget.month,
                 amount = amount,
                 createdAt = existingBudget.createdAt,
                 updatedAt = DateTimeUtil.getCurrentDateTime()

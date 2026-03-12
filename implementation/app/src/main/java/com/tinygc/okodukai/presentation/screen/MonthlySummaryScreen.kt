@@ -24,13 +24,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.tinygc.okodukai.domain.model.GoalAchievementMode
+import com.tinygc.okodukai.domain.util.DateTimeUtil
 import com.tinygc.okodukai.presentation.viewmodel.MonthlySummaryViewModel
 import com.tinygc.okodukai.presentation.viewmodel.ExpenseItem
 import com.tinygc.okodukai.presentation.viewmodel.MonthlySummaryUiState
 import com.tinygc.okodukai.presentation.viewmodel.SavingGoalProgressUiModel
 import java.text.NumberFormat
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.util.*
 
 @Composable
@@ -40,9 +39,7 @@ fun MonthlySummaryScreen(
     viewModel: MonthlySummaryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val currentMonth = remember {
-        LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"))
-    }
+    val currentMonth = DateTimeUtil.getCurrentMonth()
     MonthlySummaryContent(
         paddingValues = paddingValues,
         uiState = uiState,

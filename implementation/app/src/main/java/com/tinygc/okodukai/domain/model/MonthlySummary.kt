@@ -4,7 +4,7 @@ package com.tinygc.okodukai.domain.model
  * 月次サマリ情報
  * 
  * @param month 対象月（YYYY-MM）
- * @param budget 予算額（設定されていない場合はnull）
+ * @param budget 当月に使える予算額（固定予算 + 繰越、未設定時はnull）
  * @param totalExpense 支出合計額（未分類除外）
  * @param remainingBudget 残予算（budget - totalExpense、予算未設定時はnull）
  * @param categoryTotals カテゴリ別支出合計リスト

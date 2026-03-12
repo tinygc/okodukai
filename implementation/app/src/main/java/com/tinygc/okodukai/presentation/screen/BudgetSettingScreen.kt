@@ -2,9 +2,6 @@ package com.tinygc.okodukai.presentation.screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -45,7 +42,7 @@ fun BudgetSettingScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "予算設定",
+                    text = "毎月予算設定",
                     style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
                     fontWeight = FontWeight.SemiBold
                 )
@@ -56,15 +53,6 @@ fun BudgetSettingScreen(
                     )
                 }
             }
-        }
-
-        // Month selector
-        item {
-            MonthSelectorCardForBudget(
-                currentMonth = uiState.month,
-                onPreviousMonth = { viewModel.onMonthChange(getPreviousMonth(uiState.month)) },
-                onNextMonth = { viewModel.onMonthChange(getNextMonth(uiState.month)) }
-            )
         }
 
         // Current budget display
@@ -81,7 +69,7 @@ fun BudgetSettingScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "現在の予算",
+                            text = "現在の毎月予算",
                             style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -106,7 +94,7 @@ fun BudgetSettingScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "新しい予算を入力",
+                        text = "毎月の予算を入力",
                         style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
                         fontWeight = FontWeight.SemiBold
                     )
@@ -146,7 +134,7 @@ fun BudgetSettingScreen(
                             Spacer(modifier = Modifier.width(8.dp))
                         }
                         Text(
-                            text = if (uiState.isSaving) "保存中..." else "予算を保存",
+                            text = if (uiState.isSaving) "保存中..." else "毎月予算を保存",
                             style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp)
                         )
                     }
@@ -214,11 +202,11 @@ fun BudgetSettingScreen(
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp)
                     )
                     Text(
-                        text = "• 月ごとに独立した予算になります",
+                        text = "• 設定した金額が毎月の予算として反映されます",
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp)
                     )
                     Text(
-                        text = "• 予算を変更すると上書きされます",
+                        text = "• 金額を変更すると次回以降は新しい金額が適用されます",
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp)
                     )
                 }
@@ -239,82 +227,5 @@ fun BudgetSettingScreen(
         ) {
             CircularProgressIndicator()
         }
-    }
-}
-
-@Composable
-private fun MonthSelectorCardForBudget(
-    currentMonth: String,
-    onPreviousMonth: () -> Unit,
-    onNextMonth: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onPreviousMonth) {
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "前の月")
-            }
-
-            Text(
-                text = formatMonthDisplay(currentMonth),
-                style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
-                fontWeight = FontWeight.SemiBold
-            )
-
-            IconButton(onClick = onNextMonth) {
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "次の月")
-            }
-        }
-    }
-}
-
-// Helper functions
-private fun getPreviousMonth(currentMonth: String): String {
-    val (year, month) = currentMonth.split("-").map { it.toInt() }
-    return if (month == 1) {
-        String.format("%04d-%02d", year - 1, 12)
-    } else {
-        String.format("%04d-%02d", year, month - 1)
-    }
-}
-
-private fun getNextMonth(currentMonth: String): String {
-    return try {
-        val parts = currentMonth.split("-")
-        if (parts.size == 2) {
-            val year = parts[0].toInt()
-            val month = parts[1].toInt()
-            if (month == 12) {
-                String.format("%04d-%02d", year + 1, 1)
-            } else {
-                String.format("%04d-%02d", year, month + 1)
-            }
-        } else {
-            currentMonth
-        }
-    } catch (e: Exception) {
-        currentMonth
-    }
-}
-
-private fun formatMonthDisplay(month: String): String {
-    return try {
-        val parts = month.split("-")
-        if (parts.size == 2) {
-            val year = parts[0]
-            val monthNum = parts[1].toInt()
-            "${year}年${monthNum}月"
-        } else {
-            month
-        }
-    } catch (e: Exception) {
-        month
     }
 }

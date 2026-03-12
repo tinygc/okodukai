@@ -11,6 +11,7 @@ import com.tinygc.okodukai.domain.usecase.expense.DeleteExpenseUseCase
 import com.tinygc.okodukai.domain.usecase.expense.FakeExpenseRepository
 import com.tinygc.okodukai.domain.usecase.expense.UpdateExpenseUseCase
 import com.tinygc.okodukai.domain.usecase.income.FakeIncomeRepository
+import com.tinygc.okodukai.domain.usecase.income.GetTotalIncomeByMonthUseCase
 import com.tinygc.okodukai.domain.usecase.saving.FakeSavingGoalRepository
 import com.tinygc.okodukai.domain.usecase.saving.GetSavingsProgressUseCase
 import com.tinygc.okodukai.domain.usecase.summary.GetMonthlySummaryUseCase
@@ -48,6 +49,7 @@ class MonthlySummaryViewModelTest {
     private lateinit var deleteExpenseUseCase: DeleteExpenseUseCase
     private lateinit var updateExpenseUseCase: UpdateExpenseUseCase
     private lateinit var getCategoryByIdUseCase: GetCategoryByIdUseCase
+    private lateinit var getTotalIncomeByMonthUseCase: GetTotalIncomeByMonthUseCase
     private lateinit var viewModel: MonthlySummaryViewModel
 
     @Before
@@ -61,7 +63,8 @@ class MonthlySummaryViewModelTest {
         getMonthlySummaryUseCase = GetMonthlySummaryUseCase(
             fakeBudgetRepository,
             fakeExpenseRepository,
-            fakeCategoryRepository
+            fakeCategoryRepository,
+            fakeIncomeRepository
         )
         getSavingsProgressUseCase = GetSavingsProgressUseCase(
             fakeBudgetRepository,
@@ -72,6 +75,7 @@ class MonthlySummaryViewModelTest {
         deleteExpenseUseCase = DeleteExpenseUseCase(fakeExpenseRepository)
         updateExpenseUseCase = UpdateExpenseUseCase(fakeExpenseRepository)
         getCategoryByIdUseCase = GetCategoryByIdUseCase(fakeCategoryRepository)
+        getTotalIncomeByMonthUseCase = GetTotalIncomeByMonthUseCase(fakeIncomeRepository)
     }
 
     @Test
@@ -93,7 +97,8 @@ class MonthlySummaryViewModelTest {
             deleteExpenseUseCase,
             updateExpenseUseCase,
             getCategoryByIdUseCase,
-            getSavingsProgressUseCase
+            getSavingsProgressUseCase,
+            getTotalIncomeByMonthUseCase
         )
         advanceUntilIdle()
 
@@ -124,7 +129,8 @@ class MonthlySummaryViewModelTest {
             deleteExpenseUseCase,
             updateExpenseUseCase,
             getCategoryByIdUseCase,
-            getSavingsProgressUseCase
+            getSavingsProgressUseCase,
+            getTotalIncomeByMonthUseCase
         )
         advanceUntilIdle()
 
@@ -156,7 +162,8 @@ class MonthlySummaryViewModelTest {
             deleteExpenseUseCase,
             updateExpenseUseCase,
             getCategoryByIdUseCase,
-            getSavingsProgressUseCase
+            getSavingsProgressUseCase,
+            getTotalIncomeByMonthUseCase
         )
         advanceUntilIdle()
 
@@ -177,8 +184,8 @@ class MonthlySummaryViewModelTest {
         val jan = "2026-01"
         val feb = "2026-02"
         
-        fakeBudgetRepository.addBudget(Budget("b1", jan, 30000, "", ""))
-        fakeBudgetRepository.addBudget(Budget("b2", feb, 50000, "", ""))
+        fakeBudgetRepository.addBudget(Budget("b1", jan, 30000, "", "2026-01-01T00:00:00"))
+        fakeBudgetRepository.addBudget(Budget("b2", feb, 50000, "", "2026-02-01T00:00:00"))
         
         val category = Category("cat1", "食費", null, "", "")
         fakeCategoryRepository.addCategory(category)
@@ -191,7 +198,8 @@ class MonthlySummaryViewModelTest {
             deleteExpenseUseCase,
             updateExpenseUseCase,
             getCategoryByIdUseCase,
-            getSavingsProgressUseCase
+            getSavingsProgressUseCase,
+            getTotalIncomeByMonthUseCase
         )
         advanceUntilIdle()
 
@@ -202,7 +210,7 @@ class MonthlySummaryViewModelTest {
         // Then
         val state1 = viewModel.uiState.value
         assertEquals(jan, state1.month)
-        assertEquals(30000, state1.budget)
+        assertEquals(50000, state1.budget)
         assertEquals(1000, state1.totalExpense)
 
         // When
@@ -212,7 +220,7 @@ class MonthlySummaryViewModelTest {
         // Then
         val state2 = viewModel.uiState.value
         assertEquals(feb, state2.month)
-        assertEquals(50000, state2.budget)
+        assertEquals(99000, state2.budget)
         assertEquals(2000, state2.totalExpense)
     }
 
@@ -229,7 +237,8 @@ class MonthlySummaryViewModelTest {
             deleteExpenseUseCase,
             updateExpenseUseCase,
             getCategoryByIdUseCase,
-            getSavingsProgressUseCase
+            getSavingsProgressUseCase,
+            getTotalIncomeByMonthUseCase
         )
         advanceUntilIdle()
 
@@ -271,7 +280,8 @@ class MonthlySummaryViewModelTest {
             deleteExpenseUseCase,
             updateExpenseUseCase,
             getCategoryByIdUseCase,
-            getSavingsProgressUseCase
+            getSavingsProgressUseCase,
+            getTotalIncomeByMonthUseCase
         )
         advanceUntilIdle()
 
@@ -302,7 +312,8 @@ class MonthlySummaryViewModelTest {
             deleteExpenseUseCase,
             updateExpenseUseCase,
             getCategoryByIdUseCase,
-            getSavingsProgressUseCase
+            getSavingsProgressUseCase,
+            getTotalIncomeByMonthUseCase
         )
         advanceUntilIdle()
 
@@ -333,13 +344,83 @@ class MonthlySummaryViewModelTest {
             deleteExpenseUseCase,
             updateExpenseUseCase,
             getCategoryByIdUseCase,
-            getSavingsProgressUseCase
+            getSavingsProgressUseCase,
+            getTotalIncomeByMonthUseCase
         )
         advanceUntilIdle()
 
         // Then
         val state = viewModel.uiState.value
         assertTrue(state.isEmptyMonth)
+    }
+
+    @Test
+    fun `臨時収入が残予算に反映されること`() = runTest {
+        // Given
+        val month = "2026-02"
+        val budget = Budget("b1", month, 50000, "", "")
+        fakeBudgetRepository.addBudget(budget)
+
+        val category = Category("cat1", "食費", null, "", "")
+        fakeCategoryRepository.addCategory(category)
+
+        val expense = Expense("e1", "2026-02-01", 30000, "cat1", null, null, false, "", "")
+        fakeExpenseRepository.expenses.add(expense)
+
+        val income = com.tinygc.okodukai.domain.model.Income("inc1", "2026-02-10", 20000, "ボーナス", "", "")
+        fakeIncomeRepository.incomes.add(income)
+
+        // When
+        viewModel = MonthlySummaryViewModel(
+            getMonthlySummaryUseCase,
+            deleteExpenseUseCase,
+            updateExpenseUseCase,
+            getCategoryByIdUseCase,
+            getSavingsProgressUseCase,
+            getTotalIncomeByMonthUseCase
+        )
+        viewModel.onMonthChange(month)
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        // 残額 = 予算 - 支出 + 収入 = 50000 - 30000 + 20000 = 40000
+        assertEquals(40000, state.remainingBudget)
+    }
+
+    @Test
+    fun `臨時収入が繰越金として翌月に反映されること`() = runTest {
+        // Given
+        val budget = Budget("b1", "2026-01", 50000, "2026-01-01T00:00:00", "2026-01-01T00:00:00")
+        fakeBudgetRepository.addBudget(budget)
+
+        val category = Category("cat1", "食費", null, "", "")
+        fakeCategoryRepository.addCategory(category)
+
+        // 1月: 支出 30000 + 臨時収入 20000 => 残額 40000
+        fakeExpenseRepository.expenses.add(
+            Expense("e1", "2026-01-10", 30000, "cat1", null, null, false, "", "")
+        )
+        fakeIncomeRepository.incomes.add(
+            com.tinygc.okodukai.domain.model.Income("inc1", "2026-01-20", 20000, "ボーナス", "", "")
+        )
+
+        // When
+        viewModel = MonthlySummaryViewModel(
+            getMonthlySummaryUseCase,
+            deleteExpenseUseCase,
+            updateExpenseUseCase,
+            getCategoryByIdUseCase,
+            getSavingsProgressUseCase,
+            getTotalIncomeByMonthUseCase
+        )
+        viewModel.onMonthChange("2026-02")
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        // 2月: 予算 50000 + 繰越 40000 = 90000
+        assertEquals(90000, state.budget)
     }
 }
 

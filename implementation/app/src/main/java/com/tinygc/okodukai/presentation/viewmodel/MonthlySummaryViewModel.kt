@@ -3,8 +3,10 @@ package com.tinygc.okodukai.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tinygc.okodukai.domain.model.GoalAchievementMode
+import com.tinygc.okodukai.domain.util.DateTimeUtil
 import com.tinygc.okodukai.domain.usecase.expense.DeleteExpenseUseCase
 import com.tinygc.okodukai.domain.usecase.expense.UpdateExpenseUseCase
+import com.tinygc.okodukai.domain.usecase.income.GetTotalIncomeByMonthUseCase
 import com.tinygc.okodukai.domain.usecase.summary.GetMonthlySummaryUseCase
 import com.tinygc.okodukai.domain.usecase.category.GetCategoryByIdUseCase
 import com.tinygc.okodukai.domain.usecase.saving.GetGoalAchievementModeUseCase
@@ -15,8 +17,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 @HiltViewModel
@@ -26,6 +26,7 @@ class MonthlySummaryViewModel @Inject constructor(
     private val updateExpenseUseCase: UpdateExpenseUseCase,
     private val getCategoryByIdUseCase: GetCategoryByIdUseCase,
     private val getSavingsProgressUseCase: GetSavingsProgressUseCase,
+    private val getTotalIncomeByMonthUseCase: GetTotalIncomeByMonthUseCase,
     private val getGoalAchievementModeUseCase: GetGoalAchievementModeUseCase? = null
 ) : ViewModel() {
 
@@ -33,7 +34,7 @@ class MonthlySummaryViewModel @Inject constructor(
     val uiState: StateFlow<MonthlySummaryUiState> = _uiState.asStateFlow()
 
     init {
-        val currentMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"))
+        val currentMonth = DateTimeUtil.getCurrentMonth()
         loadSummary(currentMonth)
     }
 
@@ -96,7 +97,7 @@ class MonthlySummaryViewModel @Inject constructor(
                     )
                 } ?: emptyList()
 
-                val totalIncome = 0
+                val totalIncome = getTotalIncomeByMonthUseCase(month).getOrNull() ?: 0
                 val budgetAmount = summary.budget ?: 0
                 val totalExpense = summary.totalExpense
                 val isEmptyMonth =
@@ -111,7 +112,7 @@ class MonthlySummaryViewModel @Inject constructor(
                     topCategories = topCategories,
                     otherTotal = otherTotal,
                     expenseItems = expenseItems,
-                    totalIncome = totalIncome, // TODO: 臨時収入は別途取得
+                    totalIncome = totalIncome,
                     carryOverBalance = savingsProgress?.carryOverBalance ?: 0,
                     savingsAvailable = savingsProgress?.availableAmount ?: 0,
                     goalAchievementMode = savingsProgress?.achievementMode ?: goalMode,

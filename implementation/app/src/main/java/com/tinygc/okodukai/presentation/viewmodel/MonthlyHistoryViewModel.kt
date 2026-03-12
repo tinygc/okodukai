@@ -37,6 +37,15 @@ class MonthlyHistoryViewModel @Inject constructor(
                 // 過去12ヶ月+今月のデータを取得
                 val currentYearMonth = YearMonth.now()
                 val histories = mutableListOf<MonthlyHistoryItem>()
+                val recurringBudget = getBudgetByMonthUseCase(
+                    currentYearMonth.format(DateTimeFormatter.ofPattern("yyyy-MM"))
+                ).getOrNull()
+                val fallbackStartMonth = recurringBudget?.let {
+                    val createdMonth = it.createdAt.take(7)
+                    if (createdMonth.matches(Regex("\\d{4}-\\d{2}"))) createdMonth else it.month
+                }
+                var oldestExpenseMonth: String? = null
+                var carryOver = 0
 
                 // 過去11ヶ月から現在の月まで
                 for (i in 11 downTo 0) {
@@ -44,26 +53,36 @@ class MonthlyHistoryViewModel @Inject constructor(
                     val monthStr = yearMonth.format(DateTimeFormatter.ofPattern("yyyy-MM"))
 
                     try {
-                        // 予算を取得
-                        val budgetResult = getBudgetByMonthUseCase(monthStr)
-                        val budget = budgetResult.getOrNull()
-
                         // 支出を取得
                         val expenseResult = getExpensesByMonthUseCase(monthStr)
                         val expenses = expenseResult.getOrNull() ?: emptyList()
                         val totalExpense = expenses.sumOf { it.amount }
+                        if (oldestExpenseMonth == null && expenses.any { !it.isUncategorized }) {
+                            oldestExpenseMonth = monthStr
+                        }
 
                         // 臨時収入を取得
                         val incomeResult = getTotalIncomeByMonthUseCase(monthStr)
                         val totalIncome = incomeResult.getOrNull() ?: 0
 
-                        // 残高を計算
-                        val remainingBudget = budget?.let { it.amount - totalExpense }
+                        val budgetStartMonth = oldestExpenseMonth ?: fallbackStartMonth
+                        val isBudgetActiveMonth = recurringBudget != null &&
+                            budgetStartMonth != null &&
+                            monthStr >= budgetStartMonth
+
+                        val availableBudget = if (isBudgetActiveMonth) {
+                            recurringBudget.amount + carryOver
+                        } else {
+                            null
+                        }
+
+                        val remainingBudget = availableBudget?.let { it - totalExpense + totalIncome }
+                        carryOver = remainingBudget?.coerceAtLeast(0) ?: carryOver
 
                         histories.add(
                             MonthlyHistoryItem(
                                 month = monthStr,
-                                budget = budget?.amount,
+                                budget = availableBudget,
                                 totalExpense = totalExpense,
                                 remainingBudget = remainingBudget,
                                 totalIncome = totalIncome

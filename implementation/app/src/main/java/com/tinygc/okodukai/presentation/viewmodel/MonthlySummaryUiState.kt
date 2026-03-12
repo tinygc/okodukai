@@ -1,14 +1,13 @@
 package com.tinygc.okodukai.presentation.viewmodel
 
 import com.tinygc.okodukai.domain.model.GoalAchievementMode
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import com.tinygc.okodukai.domain.util.DateTimeUtil
 
 /**
  * 月次サマリ画面のUI状態
  */
 data class MonthlySummaryUiState(
-    val month: String = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM")),
+    val month: String = DateTimeUtil.getCurrentMonth(),
     val budget: Int? = null,
     val totalExpense: Int? = null,
     val remainingBudget: Int? = null,
