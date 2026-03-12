@@ -15,6 +15,11 @@ env:
         description: "Releaseタグ名（空なら auto-v<run_number>）"
         required: false
         type: string
+      version_name:
+        description: "アプリのVersionName（空なら 0.1.1）"
+        required: false
+        type: string
+        default: "0.1.1"
   push:
     tags:
       - "v*"
@@ -54,8 +59,18 @@ jobs:
           OKODUKAI_STORE_PASSWORD: ${{ secrets.OKODUKAI_STORE_PASSWORD }}
           OKODUKAI_KEY_ALIAS: ${{ secrets.OKODUKAI_KEY_ALIAS }}
           OKODUKAI_KEY_PASSWORD: ${{ secrets.OKODUKAI_KEY_PASSWORD }}
+          VERSION_CODE: ${{ github.run_number }}
         run: |
-          ./gradlew :app:assembleRelease :app:bundleRelease
+          if [ "${{ github.event_name }}" = "push" ]; then
+            VERSION_NAME="${{ github.ref_name }}"
+            VERSION_NAME="${VERSION_NAME#v}"
+          elif [ -n "${{ inputs.version_name }}" ]; then
+            VERSION_NAME="${{ inputs.version_name }}"
+          else
+            VERSION_NAME="0.1.1"
+          fi
+
+          ./gradlew :app:assembleRelease :app:bundleRelease -PVERSION_CODE="${VERSION_CODE}" -PVERSION_NAME="${VERSION_NAME}"
         working-directory: implementation
 
       - name: Upload APK artifact

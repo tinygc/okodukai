@@ -29,13 +29,15 @@ android {
     val releaseStorePassword = propOrEnv("OKODUKAI_STORE_PASSWORD") ?: ""
     val releaseKeyAlias = propOrEnv("OKODUKAI_KEY_ALIAS") ?: "okodukai"
     val releaseKeyPassword = propOrEnv("OKODUKAI_KEY_PASSWORD") ?: ""
+    val buildVersionCode = (project.findProperty("VERSION_CODE") as String?)?.toIntOrNull() ?: 1
+    val buildVersionName = (project.findProperty("VERSION_NAME") as String?) ?: "0.1.1"
 
     defaultConfig {
         applicationId = "com.tinygc.okodukai"
         minSdk = 27
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = buildVersionCode
+        versionName = buildVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

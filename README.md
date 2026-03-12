@@ -151,9 +151,14 @@ base64 -w 0 okodukai-release.jks
 
 3. Actions実行
   - GitHubのActionsタブから `Release Build` を手動実行
-  - または `v1.0.0` のようなタグをpushして自動実行
+  - または `v0.1.1` のようなタグをpushして自動実行
 
-4. 出力物
+4. バージョンルール
+  - `versionCode`: GitHub Actionsの`run_number`で自動インクリメント
+  - `versionName`: タグpush時はタグ名（先頭`v`除去）を使用
+  - 手動実行時は入力`version_name`（未指定なら`0.1.1`）を使用
+
+5. 出力物
   - Actions Artifact: 署名済み APK / AAB
   - GitHub Release: タグに紐づくAPK/AAB添付
 
