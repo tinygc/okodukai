@@ -160,7 +160,14 @@ base64 -w 0 okodukai-release.jks
 
 5. 出力物
   - Actions Artifact: 署名済み APK / AAB
+  - Actions Artifact: `mapping.txt`（難読化解除用）
+  - Actions Artifact: `native-debug-symbols.zip`（ネイティブシンボル用）
   - GitHub Release: タグに紐づくAPK/AAB添付
+
+6. Play Consoleアップロード時の補足
+  - App Bundle（`.aab`）をアップロード
+  - 警告が出る場合は、同じビルドの `mapping.txt` と `native-debug-symbols.zip` もアップロード
+  - リリースビルドはコード縮小（R8）を有効化しているため、`mapping.txt` の保管を推奨
 
 ローカルで署名付きリリースを作る場合は `implementation/local.properties` に以下を設定してください。
 
