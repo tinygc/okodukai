@@ -89,6 +89,33 @@
 
 ---
 
+## バックアップマイグレーション設計
+
+### バックアップフォーマット方針
+- バックアップJSONは `backupSchemaVersion` を必須とする
+- ルートに `backupPolicy` を持ち、データ集合ごとに `INCLUDED` / `EXCLUDED` を明示する
+- `EXCLUDED` は「復元不要」ではなく「復元時に再構築する前提データ」として扱う
+
+### Importパイプライン
+1. JSON構文チェック
+2. `backupSchemaVersion` 判定
+3. `BackupMigrationStep` を古い順に適用（例: v1->v2, v2->v3）
+4. 正規化済みDTOを検証（必須項目、ID重複、参照整合）
+5. トランザクション内で全置換Import
+6. `EXCLUDED` データの再構築（デフォルト投入、再計算、キャッシュ再生成）
+
+### 互換性ルール
+- backward compatibility: 旧バックアップを新アプリで読めること
+- forward compatibility: 未知フィールドは無視すること
+- breaking change時は `backupSchemaVersion` を更新し、対応Migrationを実装すること
+
+### レイヤ責務
+- Presentation: 進捗表示、失敗時メッセージ
+- Domain: Import/Exportユースケース、Migration適用、検証
+- Data: JSON I/O、Drive AppData I/O、DB全置換保存
+
+---
+
 ## 画面遷移（概要）
 - 下部タブ: 支出入力 / 月次サマリ / 管理
 - 管理 -> テンプレ管理

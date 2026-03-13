@@ -144,6 +144,34 @@
 
 ### 画面構成
 - メニュー: 予算設定 / テンプレ管理 / カテゴリ管理 / 臨時収入管理 / 月別履歴 / 貯金目標管理
+- メニュー: バックアップ（Google Drive）
+
+---
+
+## 画面: バックアップ
+
+### 目的
+- Google Drive AppDataへデータをExport/Importする
+
+### 画面構成
+- Googleサインインボタン
+- 接続中アカウント表示
+- Exportボタン
+- Import（全置換）ボタン
+
+### 挙動
+- Export時は `backupSchemaVersion` を含むJSONを生成してDrive AppDataに保存
+- Import時は `backupSchemaVersion` に応じたマイグレーションを適用して復元
+- Importは全置換で実行し、`EXCLUDED` データは復元後に再構築する
+
+### エラーメッセージ
+- Googleアカウントでサインインしてください
+- バックアップファイルが見つかりません
+- このバックアップバージョンには未対応です
+
+### メッセージ
+- Export成功時に「Google Driveにバックアップしました」を表示
+- Import成功時に「Google Driveから復元しました」を表示
 
 ---
 

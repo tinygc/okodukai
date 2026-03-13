@@ -24,4 +24,7 @@ interface SavingGoalDao {
 
     @Query("SELECT * FROM saving_goals ORDER BY display_order ASC, created_at ASC")
     fun getAllFlow(): Flow<List<SavingGoalEntity>>
+
+    @Query("DELETE FROM saving_goals")
+    suspend fun deleteAll()
 }

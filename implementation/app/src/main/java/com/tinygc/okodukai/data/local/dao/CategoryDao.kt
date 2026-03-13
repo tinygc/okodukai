@@ -92,4 +92,10 @@ interface CategoryDao {
      */
     @Query("SELECT * FROM categories ORDER BY parent_id ASC, created_at ASC")
     fun getAllFlow(): Flow<List<CategoryEntity>>
+
+    /**
+     * 全カテゴリを削除
+     */
+    @Query("DELETE FROM categories")
+    suspend fun deleteAll()
 }

@@ -136,6 +136,33 @@
 
 ## 制約と補足
 
+### バックアップメタデータモデル
+- バックアップJSONのルートに以下を持つ
+	- `backupSchemaVersion`: Int（必須）
+	- `appDataVersion`: String（任意、アプリ内部データ版）
+	- `exportedAt`: String（ISO-8601）
+	- `backupPolicy`: Object（データ集合ごとに INCLUDED/EXCLUDED）
+
+例:
+```json
+{
+	"backupSchemaVersion": 2,
+	"appDataVersion": "4",
+	"backupPolicy": {
+		"budgets": "INCLUDED",
+		"expenses": "INCLUDED",
+		"settingsCache": "EXCLUDED"
+	}
+}
+```
+
+### バックアップ対象外データの再構築方針
+- `EXCLUDED` データは次の3分類で扱う
+	- デフォルト復元型: 定数初期値で再生成
+	- 再計算型: INCLUDEDデータから再計算
+	- キャッシュ型: 起動時またはImport後に再生成
+- どの分類かを仕様で固定し、Import完了時に再構築処理を必ず実行する
+
 ### カテゴリの階層構造
 - categoriesは親を持たないもの（parent_id = NULL）がカテゴリ
 - parent_idを持つものがサブカテゴリ

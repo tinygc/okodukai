@@ -122,4 +122,10 @@ interface ExpenseDao {
      */
     @Query("SELECT * FROM expenses ORDER BY date DESC")
     suspend fun getAll(): List<ExpenseEntity>
+
+    /**
+     * 全支出を削除
+     */
+    @Query("DELETE FROM expenses")
+    suspend fun deleteAll()
 }

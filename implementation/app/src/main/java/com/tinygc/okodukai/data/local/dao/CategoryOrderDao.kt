@@ -99,4 +99,10 @@ interface CategoryOrderDao {
      */
     @Query("SELECT * FROM category_orders ORDER BY parent_id ASC, display_order ASC")
     fun getAllFlow(): Flow<List<CategoryOrderEntity>>
+
+    /**
+     * 全並び順を削除
+     */
+    @Query("DELETE FROM category_orders")
+    suspend fun deleteAll()
 }

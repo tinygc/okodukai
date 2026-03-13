@@ -16,6 +16,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.tinygc.okodukai.presentation.navigation.BottomNavDestination
 import com.tinygc.okodukai.presentation.screen.BudgetSettingScreen
+import com.tinygc.okodukai.presentation.screen.BackupManagementScreen
 import com.tinygc.okodukai.presentation.screen.CategoryManagementScreen
 import com.tinygc.okodukai.presentation.screen.DefaultCategorySettingScreen
 import com.tinygc.okodukai.presentation.screen.ExpenseEntryScreen
@@ -100,7 +101,8 @@ fun MainScreen() {
                     onNavigateToIncome = { navController.navigate("income_management") },
                     onNavigateToHistory = { navController.navigate("monthly_history") },
                     onNavigateToDefaultCategory = { navController.navigate("default_category_setting") },
-                    onNavigateToSavingGoal = { navController.navigate("saving_goal_management") }
+                    onNavigateToSavingGoal = { navController.navigate("saving_goal_management") },
+                    onNavigateToBackup = { navController.navigate("backup_management") }
                 )
             }
             composable("category_management") {
@@ -141,6 +143,12 @@ fun MainScreen() {
             }
             composable("saving_goal_management") {
                 SavingGoalManagementScreen(
+                    paddingValues = paddingValues,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable("backup_management") {
+                BackupManagementScreen(
                     paddingValues = paddingValues,
                     onBack = { navController.popBackStack() }
                 )

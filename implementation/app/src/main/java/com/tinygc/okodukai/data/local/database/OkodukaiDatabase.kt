@@ -45,5 +45,6 @@ abstract class OkodukaiDatabase : RoomDatabase() {
 
     companion object {
         const val DATABASE_NAME = "okodukai_database"
+        const val APP_DATA_VERSION = "4"
     }
 }
