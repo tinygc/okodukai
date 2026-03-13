@@ -11,12 +11,8 @@ env:
         required: true
         type: boolean
         default: true
-      release_tag:
-        description: "Releaseタグ名（空なら auto-v<run_number>）"
-        required: false
-        type: string
       version_name:
-        description: "アプリのVersionName（空なら release_tag→0.1.1 の順で決定）"
+        description: "アプリのVersionName（Releaseタグ名にも使用。空なら0.1.1）"
         required: false
         type: string
         default: ""
@@ -54,6 +50,7 @@ jobs:
           echo "${{ secrets.OKODUKAI_KEYSTORE_BASE64 }}" | base64 -d > implementation/okodukai-release.jks
 
       - name: Build Release APK and AAB
+        id: build_release
         env:
           OKODUKAI_STORE_FILE: ../okodukai-release.jks
           OKODUKAI_STORE_PASSWORD: ${{ secrets.OKODUKAI_STORE_PASSWORD }}
@@ -63,15 +60,13 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
             VERSION_NAME="${{ github.ref_name }}"
-            VERSION_NAME="${VERSION_NAME#v}"
           elif [ -n "${{ inputs.version_name }}" ]; then
             VERSION_NAME="${{ inputs.version_name }}"
-          elif [ -n "${{ inputs.release_tag }}" ]; then
-            VERSION_NAME="${{ inputs.release_tag }}"
-            VERSION_NAME="${VERSION_NAME#v}"
           else
             VERSION_NAME="0.1.1"
           fi
+
+          echo "version_name=${VERSION_NAME}" >> "$GITHUB_OUTPUT"
 
           ./gradlew :app:assembleRelease :app:bundleRelease -PVERSION_CODE="${VERSION_CODE}" -PVERSION_NAME="${VERSION_NAME}"
         working-directory: implementation
@@ -109,13 +104,7 @@ jobs:
         if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.create_release) }}
         shell: bash
         run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
-            TAG="${{ github.ref_name }}"
-          elif [ -n "${{ inputs.release_tag }}" ]; then
-            TAG="${{ inputs.release_tag }}"
-          else
-            TAG="auto-v${{ github.run_number }}"
-          fi
+          TAG="${{ steps.build_release.outputs.version_name }}"
 
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
 
