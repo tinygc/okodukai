@@ -31,7 +31,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
 import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.common.api.CommonStatusCodes
 import com.google.android.gms.common.api.Scope
 import com.google.api.services.drive.DriveScopes
 import com.tinygc.okodukai.presentation.viewmodel.BackupManagementViewModel
@@ -54,21 +56,23 @@ fun BackupManagementScreen(
     val signInLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == Activity.RESULT_OK && result.data != null) {
+        if (result.data != null) {
             try {
                 val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-                val account = task.result
+                val account = task.getResult(ApiException::class.java)
                 val accountName = account?.email ?: account?.account?.name
                 if (!accountName.isNullOrBlank()) {
                     viewModel.onAccountSelected(accountName)
                 } else {
                     viewModel.onSignInFailed("アカウント情報を取得できませんでした")
                 }
-            } catch (_: ApiException) {
-                viewModel.onSignInFailed("Googleサインインに失敗しました")
+            } catch (e: ApiException) {
+                viewModel.onSignInFailed(resolveGoogleSignInMessage(e.statusCode))
             }
-        } else {
+        } else if (result.resultCode == Activity.RESULT_CANCELED) {
             viewModel.onSignInFailed("Googleサインインをキャンセルしました")
+        } else {
+            viewModel.onSignInFailed("Googleサインインに失敗しました")
         }
     }
 
@@ -185,6 +189,30 @@ fun BackupManagementScreen(
         Spacer(modifier = Modifier.height(4.dp))
         TextButton(onClick = onBack) {
             Text("戻る")
+        }
+    }
+}
+
+private fun resolveGoogleSignInMessage(statusCode: Int): String {
+    return when (statusCode) {
+        GoogleSignInStatusCodes.SIGN_IN_CANCELLED -> "Googleサインインをキャンセルしました"
+        GoogleSignInStatusCodes.SIGN_IN_FAILED -> {
+            "Googleサインインに失敗しました（Google Play開発者サービスの状態を確認してください）"
+        }
+
+        GoogleSignInStatusCodes.SIGN_IN_REQUIRED -> {
+            "Googleアカウントの再認証が必要です。もう一度サインインしてください"
+        }
+
+        CommonStatusCodes.DEVELOPER_ERROR -> {
+            "Googleサインイン設定エラーです（SHA-1 と OAuth クライアント設定を確認してください）"
+        }
+        CommonStatusCodes.INTERNAL_ERROR -> "Googleサインイン内部エラーが発生しました。しばらくして再試行してください"
+        CommonStatusCodes.TIMEOUT -> "Googleサインインがタイムアウトしました。通信状態を確認して再試行してください"
+        CommonStatusCodes.NETWORK_ERROR -> "ネットワークエラーのためGoogleサインインに失敗しました"
+        else -> {
+            val reason = GoogleSignInStatusCodes.getStatusCodeString(statusCode)
+            "Googleサインインに失敗しました（$reason）"
         }
     }
 }
