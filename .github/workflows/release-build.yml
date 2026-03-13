@@ -11,6 +11,11 @@ env:
         required: true
         type: boolean
         default: true
+      version_code:
+        description: "アプリのVersionCode（空なら github.run_number を使用）"
+        required: false
+        type: string
+        default: ""
       version_name:
         description: "アプリのVersionName（Releaseタグ名にも使用。空なら0.1.1）"
         required: false
@@ -56,8 +61,14 @@ jobs:
           OKODUKAI_STORE_PASSWORD: ${{ secrets.OKODUKAI_STORE_PASSWORD }}
           OKODUKAI_KEY_ALIAS: ${{ secrets.OKODUKAI_KEY_ALIAS }}
           OKODUKAI_KEY_PASSWORD: ${{ secrets.OKODUKAI_KEY_PASSWORD }}
-          VERSION_CODE: ${{ github.run_number }}
+          DEFAULT_VERSION_CODE: ${{ github.run_number }}
         run: |
+          if [ -n "${{ inputs.version_code }}" ]; then
+            VERSION_CODE="${{ inputs.version_code }}"
+          else
+            VERSION_CODE="${DEFAULT_VERSION_CODE}"
+          fi
+
           if [ "${{ github.event_name }}" = "push" ]; then
             VERSION_NAME="${{ github.ref_name }}"
           elif [ -n "${{ inputs.version_name }}" ]; then
@@ -66,6 +77,7 @@ jobs:
             VERSION_NAME="0.1.1"
           fi
 
+          echo "version_code=${VERSION_CODE}" >> "$GITHUB_OUTPUT"
           echo "version_name=${VERSION_NAME}" >> "$GITHUB_OUTPUT"
 
           ./gradlew :app:assembleRelease :app:bundleRelease -PVERSION_CODE="${VERSION_CODE}" -PVERSION_NAME="${VERSION_NAME}"
