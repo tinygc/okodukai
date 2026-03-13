@@ -133,6 +133,7 @@ dependencies {
     implementation(libs.google.api.services.drive)
     implementation(libs.google.http.client.android)
     implementation(libs.google.http.client.gson)
+    implementation(libs.google.api.client.android)
 
     // Testing
     testImplementation(libs.junit)

@@ -1,13 +1,11 @@
 package com.tinygc.okodukai.data.repository
 
-import android.accounts.Account
 import android.content.Context
 import androidx.room.withTransaction
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.client.http.ByteArrayContent
-import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
-import com.google.android.gms.auth.GoogleAuthUtil
 import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
 import com.google.api.services.drive.model.File
@@ -140,21 +138,17 @@ class BackupRepositoryImpl @Inject constructor(
     }
 
     private fun buildDriveService(): Drive {
-        val account = driveAccountName ?: throw IllegalStateException("Googleアカウントでサインインしてください")
-        val oauthScope = "oauth2:${DriveScopes.DRIVE_APPDATA}"
-        val requestInitializer = HttpRequestInitializer { request ->
-            val accessToken = GoogleAuthUtil.getToken(
-                context,
-                Account(account, "com.google"),
-                oauthScope
-            )
-            request.headers.authorization = "Bearer $accessToken"
+        val accountName = driveAccountName ?: throw IllegalStateException("Googleアカウントでサインインしてください")
+        val credential = GoogleAccountCredential.usingOAuth2(
+            context,
+            listOf(DriveScopes.DRIVE_APPDATA)
+        ).apply {
+            selectedAccountName = accountName
         }
-
         return Drive.Builder(
             NetHttpTransport(),
             GsonFactory.getDefaultInstance(),
-            requestInitializer
+            credential
         )
             .setApplicationName("Okodukai")
             .build()
