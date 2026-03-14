@@ -5,12 +5,18 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.room.withTransaction
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAuthIOException
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.google.api.client.http.ByteArrayContent
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
 import com.google.api.services.drive.model.File
+import com.google.android.gms.auth.GoogleAuthException
+import com.google.android.gms.auth.UserRecoverableAuthException
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.common.api.CommonStatusCodes
 import com.tinygc.okodukai.data.backup.BackupDocument
 import com.tinygc.okodukai.data.backup.BackupJsonCodec
 import com.tinygc.okodukai.data.backup.BackupMigrationDefinitions
@@ -156,13 +162,24 @@ class BackupRepositoryImpl @Inject constructor(
     }
 
     private fun isGoogleKeyAuthError(t: Throwable): Boolean {
-        val chain = generateSequence(t) { it.cause }
-        return chain.any { throwable ->
-            val typeName = throwable::class.java.name
-            val message = throwable.message.orEmpty()
-            typeName.contains("GoogleAuthException") &&
-                message.contains("key", ignoreCase = true)
-        }
+        val chain = generateSequence(t) { it.cause }.toList()
+
+        val hasDeveloperErrorStatus = chain
+            .filterIsInstance<ApiException>()
+            .any { it.statusCode == CommonStatusCodes.DEVELOPER_ERROR }
+        if (hasDeveloperErrorStatus) return true
+
+        val authCause = chain.firstOrNull { throwable ->
+            throwable is GoogleAuthException ||
+                throwable is UserRecoverableAuthException ||
+                throwable is GoogleAuthIOException ||
+                throwable is UserRecoverableAuthIOException
+        } ?: return false
+
+        val authMessage = authCause.message.orEmpty()
+        return authMessage.contains("key", ignoreCase = true) ||
+            authMessage.contains("developer", ignoreCase = true) ||
+            authMessage.contains("oauth", ignoreCase = true)
     }
 
     private fun buildGoogleAuthDiagnosticMessage(): String {

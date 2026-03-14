@@ -124,6 +124,12 @@ class BackupManagementViewModel @Inject constructor(
             return "Google Drive権限が不足しています。サインアウト後に再サインインしてください"
         }
 
-        return error.message ?: defaultMessage
+        if (causeMessages.contains("timeout", ignoreCase = true) ||
+            causeMessages.contains("network", ignoreCase = true)
+        ) {
+            return "通信エラーが発生しました。ネットワーク状態を確認して再試行してください"
+        }
+
+        return defaultMessage
     }
 }
