@@ -1,6 +1,8 @@
 package com.tinygc.okodukai.data.repository
 
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.room.withTransaction
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.client.http.ByteArrayContent
@@ -29,6 +31,7 @@ import com.tinygc.okodukai.domain.repository.BackupRepository
 import com.tinygc.okodukai.domain.util.DateTimeUtil
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.ByteArrayOutputStream
+import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
@@ -66,74 +69,135 @@ class BackupRepositoryImpl @Inject constructor(
 
     override suspend fun exportToDriveAppData(): Result<String> = runCatching {
         withContext(Dispatchers.IO) {
-            val drive = buildDriveService()
-            val settings = userPreferencesDataStore.getSettingsSnapshot()
+            runWithDriveAuthDiagnostics {
+                val drive = buildDriveService()
+                val settings = userPreferencesDataStore.getSettingsSnapshot()
 
-            val document = BackupDocument(
-                backupSchemaVersion = BackupSchemas.CURRENT_SCHEMA_VERSION,
-                appDataVersion = OkodukaiDatabase.APP_DATA_VERSION,
-                exportedAt = DateTimeUtil.getCurrentDateTime(),
-                backupPolicy = defaultIncludedPolicy(),
-                payload = BackupPayload(
-                    budgets = budgetDao.getAll(),
-                    expenses = expenseDao.getAll(),
-                    categories = categoryDao.getAll(),
-                    categoryOrders = categoryOrderDao.getAll(),
-                    templates = templateDao.getAll(),
-                    incomes = incomeDao.getAll(),
-                    savingGoals = savingGoalDao.getAll(),
-                    settings = BackupSettings(
-                        defaultCategoryId = settings.defaultCategoryId,
-                        goalAchievementMode = settings.goalAchievementMode
+                val document = BackupDocument(
+                    backupSchemaVersion = BackupSchemas.CURRENT_SCHEMA_VERSION,
+                    appDataVersion = OkodukaiDatabase.APP_DATA_VERSION,
+                    exportedAt = DateTimeUtil.getCurrentDateTime(),
+                    backupPolicy = defaultIncludedPolicy(),
+                    payload = BackupPayload(
+                        budgets = budgetDao.getAll(),
+                        expenses = expenseDao.getAll(),
+                        categories = categoryDao.getAll(),
+                        categoryOrders = categoryOrderDao.getAll(),
+                        templates = templateDao.getAll(),
+                        incomes = incomeDao.getAll(),
+                        savingGoals = savingGoalDao.getAll(),
+                        settings = BackupSettings(
+                            defaultCategoryId = settings.defaultCategoryId,
+                            goalAchievementMode = settings.goalAchievementMode
+                        )
                     )
                 )
-            )
 
-            val rawJson = codec.encode(document)
-            val bytes = rawJson.toByteArray(Charsets.UTF_8)
-            val content = ByteArrayContent("application/json", bytes)
+                val rawJson = codec.encode(document)
+                val bytes = rawJson.toByteArray(Charsets.UTF_8)
+                val content = ByteArrayContent("application/json", bytes)
 
-            val existing = findBackupFile(drive)
-            if (existing != null) {
-                drive.files().update(existing.id, File(), content)
-                    .setFields("id,name,modifiedTime")
-                    .execute()
-            } else {
-                val metadata = File().apply {
-                    name = BackupSchemas.BACKUP_FILE_NAME
-                    parents = listOf("appDataFolder")
+                val existing = findBackupFile(drive)
+                if (existing != null) {
+                    drive.files().update(existing.id, File(), content)
+                        .setFields("id,name,modifiedTime")
+                        .execute()
+                } else {
+                    val metadata = File().apply {
+                        name = BackupSchemas.BACKUP_FILE_NAME
+                        parents = listOf("appDataFolder")
+                    }
+                    drive.files().create(metadata, content)
+                        .setFields("id,name,modifiedTime")
+                        .execute()
                 }
-                drive.files().create(metadata, content)
-                    .setFields("id,name,modifiedTime")
-                    .execute()
-            }
 
-            "Google Driveにバックアップしました"
+                "Google Driveにバックアップしました"
+            }
         }
     }
 
     override suspend fun importFromDriveAppData(): Result<String> = runCatching {
         withContext(Dispatchers.IO) {
-            val drive = buildDriveService()
-            val file = findBackupFile(drive) ?: throw IllegalStateException("バックアップファイルが見つかりません")
+            runWithDriveAuthDiagnostics {
+                val drive = buildDriveService()
+                val file = findBackupFile(drive) ?: throw IllegalStateException("バックアップファイルが見つかりません")
 
-            val output = ByteArrayOutputStream()
-            drive.files().get(file.id).executeMediaAndDownloadTo(output)
-            val rawJson = output.toString(Charsets.UTF_8.name())
+                val output = ByteArrayOutputStream()
+                drive.files().get(file.id).executeMediaAndDownloadTo(output)
+                val rawJson = output.toString(Charsets.UTF_8.name())
 
-            val schemaVersion = codec.readSchemaVersion(rawJson)
-            val migratedRaw = migrationManager.migrateToCurrent(rawJson, schemaVersion)
-            val document = codec.decode(migratedRaw)
-            validateDocument(document)
-            validatePolicyForImport(document)
+                val schemaVersion = codec.readSchemaVersion(rawJson)
+                val migratedRaw = migrationManager.migrateToCurrent(rawJson, schemaVersion)
+                val document = codec.decode(migratedRaw)
+                validateDocument(document)
+                validatePolicyForImport(document)
 
-            database.withTransaction {
-                clearAllTables()
-                restoreIncludedData(document)
-                reconstructExcludedData(document)
+                database.withTransaction {
+                    clearAllTables()
+                    restoreIncludedData(document)
+                    reconstructExcludedData(document)
+                }
+
+                "Google Driveから復元しました"
+            }
+        }
+    }
+
+    private inline fun <T> runWithDriveAuthDiagnostics(block: () -> T): T {
+        return try {
+            block()
+        } catch (t: Throwable) {
+            if (isGoogleKeyAuthError(t)) {
+                throw IllegalStateException(buildGoogleAuthDiagnosticMessage(), t)
+            }
+            throw t
+        }
+    }
+
+    private fun isGoogleKeyAuthError(t: Throwable): Boolean {
+        val chain = generateSequence(t) { it.cause }
+        return chain.any { throwable ->
+            val typeName = throwable::class.java.name
+            val message = throwable.message.orEmpty()
+            typeName.contains("GoogleAuthException") &&
+                message.contains("key", ignoreCase = true)
+        }
+    }
+
+    private fun buildGoogleAuthDiagnosticMessage(): String {
+        val packageName = context.packageName
+        val fingerprints = getSigningSha1Fingerprints()
+        val fingerprintLabel = if (fingerprints.isEmpty()) "取得失敗" else fingerprints.joinToString(",")
+        return "Google認証設定エラーです（package=$packageName, SHA-1=$fingerprintLabel をAndroid OAuthクライアントへ登録してください）"
+    }
+
+    private fun getSigningSha1Fingerprints(): List<String> {
+        return try {
+            val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                context.packageManager.getPackageInfo(
+                    context.packageName,
+                    PackageManager.PackageInfoFlags.of(PackageManager.GET_SIGNING_CERTIFICATES.toLong())
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                context.packageManager.getPackageInfo(context.packageName, PackageManager.GET_SIGNATURES)
             }
 
-            "Google Driveから復元しました"
+            val signatures = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                packageInfo.signingInfo?.apkContentsSigners ?: emptyArray()
+            } else {
+                @Suppress("DEPRECATION")
+                packageInfo.signatures ?: emptyArray()
+            }
+
+            signatures.map { signature ->
+                val digest = MessageDigest.getInstance("SHA1")
+                    .digest(signature.toByteArray())
+                digest.joinToString(":") { "%02X".format(it) }
+            }
+        } catch (_: Exception) {
+            emptyList()
         }
     }
 
