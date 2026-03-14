@@ -2,6 +2,7 @@ package com.tinygc.okodukai.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.auth.GoogleAuthException
 import com.tinygc.okodukai.domain.usecase.backup.ClearDriveAccountUseCase
 import com.tinygc.okodukai.domain.usecase.backup.ExportBackupToDriveUseCase
 import com.tinygc.okodukai.domain.usecase.backup.ImportBackupFromDriveUseCase
@@ -63,7 +64,7 @@ class BackupManagementViewModel @Inject constructor(
                 _uiState.value.copy(
                     isWorking = false,
                     successMessage = null,
-                    errorMessage = result.exceptionOrNull()?.message ?: "バックアップに失敗しました"
+                    errorMessage = toBackupErrorMessage(result.exceptionOrNull(), "バックアップに失敗しました")
                 )
             }
         }
@@ -83,7 +84,7 @@ class BackupManagementViewModel @Inject constructor(
                 _uiState.value.copy(
                     isWorking = false,
                     successMessage = null,
-                    errorMessage = result.exceptionOrNull()?.message ?: "復元に失敗しました"
+                    errorMessage = toBackupErrorMessage(result.exceptionOrNull(), "復元に失敗しました")
                 )
             }
         }
@@ -91,5 +92,26 @@ class BackupManagementViewModel @Inject constructor(
 
     fun clearMessages() {
         _uiState.value = _uiState.value.copy(errorMessage = null, successMessage = null)
+    }
+
+    private fun toBackupErrorMessage(error: Throwable?, defaultMessage: String): String {
+        if (error == null) return defaultMessage
+
+        val causeMessages = generateSequence(error) { it.cause }
+            .mapNotNull { it.message }
+            .joinToString(" | ")
+
+        val hasKeyError = error is GoogleAuthException || causeMessages.contains("key", ignoreCase = true)
+        if (hasKeyError) {
+            return "Google認証設定エラーです（このビルドを署名しているSHA-1をOAuthクライアントに追加してください）"
+        }
+
+        if (causeMessages.contains("insufficient", ignoreCase = true) ||
+            causeMessages.contains("permission", ignoreCase = true)
+        ) {
+            return "Google Drive権限が不足しています。サインアウト後に再サインインしてください"
+        }
+
+        return error.message ?: defaultMessage
     }
 }
