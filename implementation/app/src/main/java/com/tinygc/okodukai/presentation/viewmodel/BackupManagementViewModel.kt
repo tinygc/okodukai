@@ -97,9 +97,21 @@ class BackupManagementViewModel @Inject constructor(
     private fun toBackupErrorMessage(error: Throwable?, defaultMessage: String): String {
         if (error == null) return defaultMessage
 
-        val causeMessages = generateSequence(error) { it.cause }
+        val causes = generateSequence(error) { it.cause }.toList()
+        val causeMessages = causes
             .mapNotNull { it.message }
             .joinToString(" | ")
+
+        val detailedGoogleAuthMessage = causes
+            .mapNotNull { it.message }
+            .firstOrNull {
+                it.contains("Google認証設定エラー", ignoreCase = true) ||
+                    it.contains("SHA-1=", ignoreCase = true) ||
+                    it.contains("package=", ignoreCase = true)
+            }
+        if (detailedGoogleAuthMessage != null) {
+            return detailedGoogleAuthMessage
+        }
 
         val hasKeyError = error is GoogleAuthException || causeMessages.contains("key", ignoreCase = true)
         if (hasKeyError) {
