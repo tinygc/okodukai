@@ -154,10 +154,14 @@ class BackupRepositoryImpl @Inject constructor(
         return try {
             block()
         } catch (t: Throwable) {
+            val signingDiagnostic = buildSigningDiagnosticLabel()
             if (isGoogleKeyAuthError(t)) {
-                throw IllegalStateException(buildGoogleAuthDiagnosticMessage(), t)
+                throw IllegalStateException(buildGoogleAuthDiagnosticMessage(signingDiagnostic), t)
             }
-            throw t
+            throw IllegalStateException(
+                "エラーが発生しました（診断情報: $signingDiagnostic）",
+                t
+            )
         }
     }
 
@@ -182,11 +186,15 @@ class BackupRepositoryImpl @Inject constructor(
             authMessage.contains("oauth", ignoreCase = true)
     }
 
-    private fun buildGoogleAuthDiagnosticMessage(): String {
+    private fun buildGoogleAuthDiagnosticMessage(signingDiagnostic: String): String {
+        return "Google認証設定エラーです（$signingDiagnostic をAndroid OAuthクライアントへ登録してください）"
+    }
+
+    private fun buildSigningDiagnosticLabel(): String {
         val packageName = context.packageName
         val fingerprints = getSigningSha1Fingerprints()
         val fingerprintLabel = if (fingerprints.isEmpty()) "取得失敗" else fingerprints.joinToString(",")
-        return "Google認証設定エラーです（package=$packageName, SHA-1=$fingerprintLabel をAndroid OAuthクライアントへ登録してください）"
+        return "package=$packageName, SHA-1=$fingerprintLabel"
     }
 
     private fun getSigningSha1Fingerprints(): List<String> {
