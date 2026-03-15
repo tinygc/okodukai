@@ -19,3 +19,21 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Google API Client / Drive model classes rely on reflection and @Key annotations.
+# Keep signatures + annotations and preserve model members to avoid
+# "key error" / abstract-class instantiation failures in minified release builds.
+-keepattributes Signature,RuntimeVisibleAnnotations,AnnotationDefault
+
+-keep class com.google.api.client.util.Key
+-keep class com.google.api.client.util.GenericData { *; }
+-keep class com.google.api.client.json.GenericJson { *; }
+
+-keepclassmembers class * {
+	@com.google.api.client.util.Key <fields>;
+}
+
+-keep class com.google.api.services.drive.model.** { *; }
+-keep class com.google.api.services.drive.** { *; }
+-dontwarn com.google.api.client.**
+-dontwarn com.google.api.services.**
