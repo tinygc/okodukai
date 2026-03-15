@@ -155,11 +155,15 @@ class BackupRepositoryImpl @Inject constructor(
             block()
         } catch (t: Throwable) {
             val signingDiagnostic = buildSigningDiagnosticLabel()
+            val exceptionDiagnostic = buildExceptionDiagnosticLabel(t)
             if (isGoogleKeyAuthError(t)) {
-                throw IllegalStateException(buildGoogleAuthDiagnosticMessage(signingDiagnostic), t)
+                throw IllegalStateException(
+                    buildGoogleAuthDiagnosticMessage(signingDiagnostic, exceptionDiagnostic),
+                    t
+                )
             }
             throw IllegalStateException(
-                "エラーが発生しました（診断情報: $signingDiagnostic）",
+                "エラーが発生しました（診断情報: $signingDiagnostic, $exceptionDiagnostic）",
                 t
             )
         }
@@ -186,8 +190,11 @@ class BackupRepositoryImpl @Inject constructor(
             authMessage.contains("oauth", ignoreCase = true)
     }
 
-    private fun buildGoogleAuthDiagnosticMessage(signingDiagnostic: String): String {
-        return "Google認証設定エラーです（$signingDiagnostic をAndroid OAuthクライアントへ登録してください）"
+    private fun buildGoogleAuthDiagnosticMessage(
+        signingDiagnostic: String,
+        exceptionDiagnostic: String
+    ): String {
+        return "Google認証設定エラーです（$signingDiagnostic, $exceptionDiagnostic を確認してください）"
     }
 
     private fun buildSigningDiagnosticLabel(): String {
@@ -195,6 +202,24 @@ class BackupRepositoryImpl @Inject constructor(
         val fingerprints = getSigningSha1Fingerprints()
         val fingerprintLabel = if (fingerprints.isEmpty()) "取得失敗" else fingerprints.joinToString(",")
         return "package=$packageName, SHA-1=$fingerprintLabel"
+    }
+
+    private fun buildExceptionDiagnosticLabel(t: Throwable): String {
+        val diagnostics = generateSequence(t) { it.cause }
+            .take(3)
+            .map { throwable ->
+                val type = throwable::class.java.simpleName
+                val status = (throwable as? ApiException)?.statusCode?.let { ",statusCode=$it" }.orEmpty()
+                val message = throwable.message?.replace('\n', ' ')?.take(120).orEmpty()
+                if (message.isBlank()) {
+                    "type=$type$status"
+                } else {
+                    "type=$type$status,message=$message"
+                }
+            }
+            .toList()
+
+        return diagnostics.joinToString(" | ")
     }
 
     private fun getSigningSha1Fingerprints(): List<String> {
