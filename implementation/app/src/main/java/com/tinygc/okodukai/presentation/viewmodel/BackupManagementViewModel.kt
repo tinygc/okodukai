@@ -111,6 +111,28 @@ class BackupManagementViewModel @Inject constructor(
             else "Google認証設定エラーです（このビルドを署名しているSHA-1をOAuthクライアントに追加してください）"
         }
 
+        val importStepMessage = causes
+            .mapNotNull { it.message }
+            .firstOrNull { it.startsWith("インポート失敗:") }
+        if (importStepMessage != null) {
+            return importStepMessage
+        }
+
+        val importSpecificMessage = causes
+            .mapNotNull { it.message }
+            .firstOrNull {
+                it == "バックアップファイルが見つかりません" ||
+                    it == "バックアップ形式が不正です" ||
+                    it == "カテゴリデータが不正です" ||
+                    it == "支出データが不正です" ||
+                    it == "backupPolicy に必須キーが不足しています" ||
+                    it.startsWith("backupPolicy の値が不正です") ||
+                    it == "settings 以外の EXCLUDED は未対応です"
+            }
+        if (importSpecificMessage != null) {
+            return importSpecificMessage
+        }
+
         if (causeMessages.contains("insufficient", ignoreCase = true) ||
             causeMessages.contains("permission", ignoreCase = true)
         ) {

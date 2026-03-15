@@ -128,22 +128,36 @@ class BackupRepositoryImpl @Inject constructor(
         withContext(Dispatchers.IO) {
             runWithDriveAuthDiagnostics {
                 val drive = buildDriveService()
-                val file = findBackupFile(drive) ?: throw IllegalStateException("バックアップファイルが見つかりません")
+                val file = runImportStep("バックアップファイルの検索") {
+                    findBackupFile(drive) ?: throw IllegalStateException("バックアップファイルが見つかりません")
+                }
 
-                val output = ByteArrayOutputStream()
-                drive.files().get(file.id).executeMediaAndDownloadTo(output)
-                val rawJson = output.toString(Charsets.UTF_8.name())
+                val rawJson = runImportStep("バックアップファイルのダウンロード", file) {
+                    val output = ByteArrayOutputStream()
+                    drive.files().get(file.id).executeMediaAndDownloadTo(output)
+                    output.toString(Charsets.UTF_8.name())
+                }
 
-                val schemaVersion = codec.readSchemaVersion(rawJson)
-                val migratedRaw = migrationManager.migrateToCurrent(rawJson, schemaVersion)
-                val document = codec.decode(migratedRaw)
-                validateDocument(document)
-                validatePolicyForImport(document)
+                val schemaVersion = runImportStep("バックアップスキーマの読取", file) {
+                    codec.readSchemaVersion(rawJson)
+                }
+                val migratedRaw = runImportStep("バックアップデータの移行", file) {
+                    migrationManager.migrateToCurrent(rawJson, schemaVersion)
+                }
+                val document = runImportStep("バックアップJSONの解析", file) {
+                    codec.decode(migratedRaw)
+                }
+                runImportStep("バックアップ内容の検証", file) {
+                    validateDocument(document)
+                    validatePolicyForImport(document)
+                }
 
-                database.withTransaction {
-                    clearAllTables()
-                    restoreIncludedData(document)
-                    reconstructExcludedData(document)
+                runImportStep("端末データへの反映", file) {
+                    database.withTransaction {
+                        clearAllTables()
+                        restoreIncludedData(document)
+                        reconstructExcludedData(document)
+                    }
                 }
 
                 "Google Driveから復元しました"
@@ -186,6 +200,26 @@ class BackupRepositoryImpl @Inject constructor(
             (it is GoogleAuthException && it !is UserRecoverableAuthException) ||
                 (it is GoogleAuthIOException && it !is UserRecoverableAuthIOException)
         }
+    }
+
+    private inline fun <T> runImportStep(step: String, file: File? = null, block: () -> T): T {
+        return try {
+            block()
+        } catch (t: Throwable) {
+            throw IllegalStateException(buildImportStepMessage(step, file, t), t)
+        }
+    }
+
+    private fun buildImportStepMessage(step: String, file: File?, t: Throwable): String {
+        val baseMessage = "インポート失敗: $step"
+        if (!BuildConfig.DEBUG) {
+            return baseMessage
+        }
+
+        val fileLabel = file?.let {
+            "fileId=${it.id},name=${it.name},modifiedTime=${it.modifiedTime?.value}"
+        } ?: "file=unknown"
+        return "$baseMessage（$fileLabel, ${buildExceptionDiagnosticLabel(t)}）"
     }
 
     private fun buildSigningDiagnosticLabel(): String {
