@@ -35,5 +35,6 @@
 
 -keep class com.google.api.services.drive.model.** { *; }
 -keep class com.google.api.services.drive.** { *; }
--dontwarn com.google.api.client.**
--dontwarn com.google.api.services.**
+-dontwarn com.google.api.client.googleapis.**
+-dontwarn com.google.api.client.http.**
+-dontwarn com.google.api.services.drive.**

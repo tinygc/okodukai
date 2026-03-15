@@ -2,7 +2,7 @@ package com.tinygc.okodukai.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.android.gms.auth.GoogleAuthException
+import com.tinygc.okodukai.BuildConfig
 import com.tinygc.okodukai.domain.usecase.backup.ClearDriveAccountUseCase
 import com.tinygc.okodukai.domain.usecase.backup.ExportBackupToDriveUseCase
 import com.tinygc.okodukai.domain.usecase.backup.ImportBackupFromDriveUseCase
@@ -102,20 +102,13 @@ class BackupManagementViewModel @Inject constructor(
             .mapNotNull { it.message }
             .joinToString(" | ")
 
-        val detailedGoogleAuthMessage = causes
+        // Repo が認証設定エラーとしてタグ付けしたメッセージを処理
+        val authConfigMessage = causes
             .mapNotNull { it.message }
-            .firstOrNull {
-                it.contains("Google認証設定エラー", ignoreCase = true) ||
-                    it.contains("SHA-1=", ignoreCase = true) ||
-                    it.contains("package=", ignoreCase = true)
-            }
-        if (detailedGoogleAuthMessage != null) {
-            return detailedGoogleAuthMessage
-        }
-
-        val hasKeyError = error is GoogleAuthException || causeMessages.contains("key", ignoreCase = true)
-        if (hasKeyError) {
-            return "Google認証設定エラーです（このビルドを署名しているSHA-1をOAuthクライアントに追加してください）"
+            .firstOrNull { it.contains("Google認証設定エラー", ignoreCase = true) }
+        if (authConfigMessage != null) {
+            return if (BuildConfig.DEBUG) authConfigMessage
+            else "Google認証設定エラーです（このビルドを署名しているSHA-1をOAuthクライアントに追加してください）"
         }
 
         if (causeMessages.contains("insufficient", ignoreCase = true) ||

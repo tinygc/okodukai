@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.room.withTransaction
+import com.tinygc.okodukai.BuildConfig
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAuthIOException
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
@@ -154,47 +155,37 @@ class BackupRepositoryImpl @Inject constructor(
         return try {
             block()
         } catch (t: Throwable) {
-            val signingDiagnostic = buildSigningDiagnosticLabel()
-            val exceptionDiagnostic = buildExceptionDiagnosticLabel(t)
             if (isGoogleKeyAuthError(t)) {
+                val message = if (BuildConfig.DEBUG) {
+                    "Google認証設定エラーです（${buildSigningDiagnosticLabel()}, ${buildExceptionDiagnosticLabel(t)} を確認してください）"
+                } else {
+                    "Google認証設定エラーです"
+                }
+                throw IllegalStateException(message, t)
+            }
+            if (BuildConfig.DEBUG) {
                 throw IllegalStateException(
-                    buildGoogleAuthDiagnosticMessage(signingDiagnostic, exceptionDiagnostic),
+                    "エラーが発生しました（診断情報: ${buildSigningDiagnosticLabel()}, ${buildExceptionDiagnosticLabel(t)}）",
                     t
                 )
             }
-            throw IllegalStateException(
-                "エラーが発生しました（診断情報: $signingDiagnostic, $exceptionDiagnostic）",
-                t
-            )
+            throw IllegalStateException("エラーが発生しました", t)
         }
     }
 
     private fun isGoogleKeyAuthError(t: Throwable): Boolean {
         val chain = generateSequence(t) { it.cause }.toList()
 
-        val hasDeveloperErrorStatus = chain
-            .filterIsInstance<ApiException>()
-            .any { it.statusCode == CommonStatusCodes.DEVELOPER_ERROR }
-        if (hasDeveloperErrorStatus) return true
+        // DEVELOPER_ERROR は OAuth クライアント設定ミス（SHA-1 未登録など）の確定的な指標
+        if (chain.filterIsInstance<ApiException>().any { it.statusCode == CommonStatusCodes.DEVELOPER_ERROR }) {
+            return true
+        }
 
-        val authCause = chain.firstOrNull { throwable ->
-            throwable is GoogleAuthException ||
-                throwable is UserRecoverableAuthException ||
-                throwable is GoogleAuthIOException ||
-                throwable is UserRecoverableAuthIOException
-        } ?: return false
-
-        val authMessage = authCause.message.orEmpty()
-        return authMessage.contains("key", ignoreCase = true) ||
-            authMessage.contains("developer", ignoreCase = true) ||
-            authMessage.contains("oauth", ignoreCase = true)
-    }
-
-    private fun buildGoogleAuthDiagnosticMessage(
-        signingDiagnostic: String,
-        exceptionDiagnostic: String
-    ): String {
-        return "Google認証設定エラーです（$signingDiagnostic, $exceptionDiagnostic を確認してください）"
+        // UserRecoverable 系（再サインインが必要）は設定エラーではないので除外
+        return chain.any {
+            (it is GoogleAuthException && it !is UserRecoverableAuthException) ||
+                (it is GoogleAuthIOException && it !is UserRecoverableAuthIOException)
+        }
     }
 
     private fun buildSigningDiagnosticLabel(): String {
