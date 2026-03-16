@@ -111,13 +111,6 @@ class BackupManagementViewModel @Inject constructor(
             else "Google認証設定エラーです（このビルドを署名しているSHA-1をOAuthクライアントに追加してください）"
         }
 
-        val importStepMessage = causes
-            .mapNotNull { it.message }
-            .firstOrNull { it.startsWith("インポート失敗:") }
-        if (importStepMessage != null) {
-            return importStepMessage
-        }
-
         val importSpecificMessage = causes
             .mapNotNull { it.message }
             .firstOrNull {
@@ -131,6 +124,13 @@ class BackupManagementViewModel @Inject constructor(
             }
         if (importSpecificMessage != null) {
             return importSpecificMessage
+        }
+
+        val importStepMessage = causes
+            .mapNotNull { it.message }
+            .firstOrNull { it.startsWith("インポート失敗:") }
+        if (importStepMessage != null) {
+            return importStepMessage
         }
 
         if (causeMessages.contains("insufficient", ignoreCase = true) ||

@@ -34,4 +34,18 @@ class BackupJsonCodecTest {
 
         assertEquals(1, version)
     }
+
+    @Test
+    fun `旧形式でschemaVersion欠落時はv1として扱う`() {
+        val legacyJson = """
+            {
+              "appDataVersion": "4",
+              "payload": {"budgets": []}
+            }
+        """.trimIndent()
+
+        val version = codec.readSchemaVersion(legacyJson)
+
+        assertEquals(1, version)
+    }
 }

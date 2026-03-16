@@ -17,8 +17,14 @@ class BackupJsonCodec(
     }
 
     fun readSchemaVersion(rawJson: String): Int {
-        val root: JsonObject = JsonParser.parseString(rawJson).asJsonObject
-        return root.get("backupSchemaVersion")?.asInt
-            ?: throw IllegalArgumentException("backupSchemaVersion が存在しません")
+        val normalized = rawJson.removePrefix("\uFEFF").trim()
+        val root: JsonObject = JsonParser.parseString(normalized).asJsonObject
+        root.get("backupSchemaVersion")?.asInt?.let { return it }
+
+        // 旧バックアップ(v1)は backupSchemaVersion を持たないため互換として 1 扱いにする。
+        val hasLegacyShape = root.has("payload") && root.has("appDataVersion")
+        if (hasLegacyShape) return 1
+
+        throw IllegalArgumentException("backupSchemaVersion が存在しません")
     }
 }

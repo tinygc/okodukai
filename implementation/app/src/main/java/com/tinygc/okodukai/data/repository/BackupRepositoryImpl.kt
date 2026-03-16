@@ -41,6 +41,7 @@ import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -132,17 +133,17 @@ class BackupRepositoryImpl @Inject constructor(
                     findBackupFile(drive) ?: throw IllegalStateException("バックアップファイルが見つかりません")
                 }
 
-                val rawJson = runImportStep("バックアップファイルのダウンロード", file) {
+                val normalizedRawJson = runImportStep("バックアップファイルのダウンロード", file) {
                     val output = ByteArrayOutputStream()
                     drive.files().get(file.id).executeMediaAndDownloadTo(output)
-                    output.toString(Charsets.UTF_8.name())
+                    normalizeBackupJson(output.toString(Charsets.UTF_8.name()))
                 }
 
                 val schemaVersion = runImportStep("バックアップスキーマの読取", file) {
-                    codec.readSchemaVersion(rawJson)
+                    codec.readSchemaVersion(normalizedRawJson)
                 }
                 val migratedRaw = runImportStep("バックアップデータの移行", file) {
-                    migrationManager.migrateToCurrent(rawJson, schemaVersion)
+                    migrationManager.migrateToCurrent(normalizedRawJson, schemaVersion)
                 }
                 val document = runImportStep("バックアップJSONの解析", file) {
                     codec.decode(migratedRaw)
@@ -168,6 +169,8 @@ class BackupRepositoryImpl @Inject constructor(
     private inline fun <T> runWithDriveAuthDiagnostics(block: () -> T): T {
         return try {
             block()
+        } catch (cancellation: CancellationException) {
+            throw cancellation
         } catch (t: Throwable) {
             if (isGoogleKeyAuthError(t)) {
                 val message = if (BuildConfig.DEBUG) {
@@ -205,9 +208,15 @@ class BackupRepositoryImpl @Inject constructor(
     private inline fun <T> runImportStep(step: String, file: File? = null, block: () -> T): T {
         return try {
             block()
+        } catch (cancellation: CancellationException) {
+            throw cancellation
         } catch (t: Throwable) {
             throw IllegalStateException(buildImportStepMessage(step, file, t), t)
         }
+    }
+
+    private fun normalizeBackupJson(rawJson: String): String {
+        return rawJson.removePrefix("\uFEFF").trim()
     }
 
     private fun buildImportStepMessage(step: String, file: File?, t: Throwable): String {
