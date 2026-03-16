@@ -138,17 +138,30 @@ class BackupRepositoryImpl @Inject constructor(
                     drive.files().get(file.id).executeMediaAndDownloadTo(output)
                     normalizeBackupJson(output.toString(Charsets.UTF_8.name()))
                 }
+                val rawJsonDebugInfo = buildBackupJsonDebugSummary(normalizedRawJson)
 
-                val schemaVersion = runImportStep("バックアップスキーマの読取", file) {
+                val schemaVersion = runImportStep("バックアップスキーマの読取", file, rawJsonDebugInfo) {
                     codec.readSchemaVersion(normalizedRawJson)
                 }
-                val migratedRaw = runImportStep("バックアップデータの移行", file) {
+                val migratedRaw = runImportStep(
+                    "バックアップデータの移行",
+                    file,
+                    "schemaVersion=$schemaVersion"
+                ) {
                     migrationManager.migrateToCurrent(normalizedRawJson, schemaVersion)
                 }
-                val document = runImportStep("バックアップJSONの解析", file) {
+                val document = runImportStep(
+                    "バックアップJSONの解析",
+                    file,
+                    "migratedLength=${migratedRaw.length}"
+                ) {
                     codec.decode(migratedRaw)
                 }
-                runImportStep("バックアップ内容の検証", file) {
+                runImportStep(
+                    "バックアップ内容の検証",
+                    file,
+                    "schema=${document.backupSchemaVersion},policyKeys=${document.backupPolicy.keys.sorted().joinToString(",")}" 
+                ) {
                     validateDocument(document)
                     validatePolicyForImport(document)
                 }
@@ -205,13 +218,18 @@ class BackupRepositoryImpl @Inject constructor(
         }
     }
 
-    private inline fun <T> runImportStep(step: String, file: File? = null, block: () -> T): T {
+    private inline fun <T> runImportStep(
+        step: String,
+        file: File? = null,
+        debugDetail: String? = null,
+        block: () -> T
+    ): T {
         return try {
             block()
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (t: Throwable) {
-            throw IllegalStateException(buildImportStepMessage(step, file, t), t)
+            throw IllegalStateException(buildImportStepMessage(step, file, t, debugDetail), t)
         }
     }
 
@@ -219,7 +237,22 @@ class BackupRepositoryImpl @Inject constructor(
         return rawJson.removePrefix("\uFEFF").trim()
     }
 
-    private fun buildImportStepMessage(step: String, file: File?, t: Throwable): String {
+    private fun buildBackupJsonDebugSummary(rawJson: String): String {
+        val head = rawJson
+            .take(120)
+            .replace("\n", "\\n")
+            .replace("\r", "\\r")
+            .replace("\t", "\\t")
+
+        return listOf(
+            "length=${rawJson.length}",
+            "startsWithObject=${rawJson.startsWith("{")}",
+            "hasSchemaKey=${rawJson.contains("\"backupSchemaVersion\"")}",
+            "head=$head"
+        ).joinToString(",")
+    }
+
+    private fun buildImportStepMessage(step: String, file: File?, t: Throwable, debugDetail: String? = null): String {
         val baseMessage = "インポート失敗: $step"
         if (!BuildConfig.DEBUG) {
             return baseMessage
@@ -228,7 +261,8 @@ class BackupRepositoryImpl @Inject constructor(
         val fileLabel = file?.let {
             "fileId=${it.id},name=${it.name},modifiedTime=${it.modifiedTime?.value}"
         } ?: "file=unknown"
-        return "$baseMessage（$fileLabel, ${buildExceptionDiagnosticLabel(t)}）"
+        val detailLabel = debugDetail?.take(300)?.let { ", detail=$it" }.orEmpty()
+        return "$baseMessage（$fileLabel$detailLabel, ${buildExceptionDiagnosticLabel(t)}）"
     }
 
     private fun buildSigningDiagnosticLabel(): String {

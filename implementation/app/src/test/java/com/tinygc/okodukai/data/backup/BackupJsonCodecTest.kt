@@ -1,6 +1,7 @@
 package com.tinygc.okodukai.data.backup
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class BackupJsonCodecTest {
@@ -47,5 +48,35 @@ class BackupJsonCodecTest {
         val version = codec.readSchemaVersion(legacyJson)
 
         assertEquals(1, version)
+    }
+
+    @Test
+    fun `空文字は読み取り失敗になる`() {
+        val exception = runCatching {
+            codec.readSchemaVersion("   ")
+        }.exceptionOrNull()
+
+        assertTrue(exception is IllegalArgumentException)
+        assertEquals("バックアップファイルが空です", exception?.message)
+    }
+
+    @Test
+    fun `不正JSONは形式不正として失敗する`() {
+        val exception = runCatching {
+            codec.readSchemaVersion("not-json")
+        }.exceptionOrNull()
+
+        assertTrue(exception is IllegalArgumentException)
+        assertEquals("バックアップJSONの形式が不正です", exception?.message)
+    }
+
+    @Test
+    fun `schemaVersionが数値以外なら失敗する`() {
+        val exception = runCatching {
+            codec.readSchemaVersion("{\"backupSchemaVersion\":\"x\"}")
+        }.exceptionOrNull()
+
+        assertTrue(exception is IllegalArgumentException)
+        assertEquals("backupSchemaVersion の値が不正です", exception?.message)
     }
 }

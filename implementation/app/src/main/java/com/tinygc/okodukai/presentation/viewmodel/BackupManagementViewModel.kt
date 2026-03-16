@@ -115,6 +115,10 @@ class BackupManagementViewModel @Inject constructor(
             .mapNotNull { it.message }
             .firstOrNull {
                 it == "バックアップファイルが見つかりません" ||
+                    it == "バックアップファイルが空です" ||
+                    it == "バックアップJSONの形式が不正です" ||
+                    it == "backupSchemaVersion が存在しません" ||
+                    it == "backupSchemaVersion の値が不正です" ||
                     it == "バックアップ形式が不正です" ||
                     it == "カテゴリデータが不正です" ||
                     it == "支出データが不正です" ||
