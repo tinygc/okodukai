@@ -38,3 +38,13 @@
 -dontwarn com.google.api.client.googleapis.**
 -dontwarn com.google.api.client.http.**
 -dontwarn com.google.api.services.drive.**
+
+# Backup model classes: Gson uses Java reflection to serialize/deserialize these.
+# Without keep rules, R8 renames the fields and the JSON keys become obfuscated
+# (e.g., "backupSchemaVersion" -> "a"), causing import failures.
+-keep class com.tinygc.okodukai.data.backup.BackupDocument { *; }
+-keep class com.tinygc.okodukai.data.backup.BackupPayload { *; }
+-keep class com.tinygc.okodukai.data.backup.BackupSettings { *; }
+
+# Room entities used in backup payload: same reason — preserve field names for Gson.
+-keep class com.tinygc.okodukai.data.local.entity.** { *; }
