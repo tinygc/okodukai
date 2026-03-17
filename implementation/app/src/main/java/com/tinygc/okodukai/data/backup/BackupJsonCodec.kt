@@ -14,29 +14,31 @@ class BackupJsonCodec(
     }
 
     fun decode(rawJson: String): BackupDocument {
+        // 呼び出し元で normalizeBackupJson() によるBOM除去・trim済みであること。
         return gson.fromJson(rawJson, BackupDocument::class.java)
+            ?: throw IllegalArgumentException(BackupErrorMessages.DECODE_NULL)
     }
 
     fun readSchemaVersion(rawJson: String): Int {
         val normalized = rawJson.removePrefix("\uFEFF").trim()
         if (normalized.isBlank()) {
-            throw IllegalArgumentException("バックアップファイルが空です")
+            throw IllegalArgumentException(BackupErrorMessages.FILE_EMPTY)
         }
 
         val root: JsonObject = try {
             val element = JsonParser.parseString(normalized)
             if (!element.isJsonObject) {
-                throw IllegalArgumentException("バックアップJSONの形式が不正です")
+                throw IllegalArgumentException(BackupErrorMessages.JSON_MALFORMED)
             }
             element.asJsonObject
         } catch (e: JsonSyntaxException) {
-            throw IllegalArgumentException("バックアップJSONの形式が不正です", e)
+            throw IllegalArgumentException(BackupErrorMessages.JSON_MALFORMED, e)
         }
 
         val schemaElement = root.get("backupSchemaVersion")
         if (schemaElement != null) {
             if (!schemaElement.isJsonPrimitive || !schemaElement.asJsonPrimitive.isNumber) {
-                throw IllegalArgumentException("backupSchemaVersion の値が不正です")
+                throw IllegalArgumentException(BackupErrorMessages.SCHEMA_VALUE_INVALID)
             }
             return schemaElement.asInt
         }
@@ -46,6 +48,6 @@ class BackupJsonCodec(
             root.get("appDataVersion")?.isJsonPrimitive == true
         if (hasLegacyShape) return 1
 
-        throw IllegalArgumentException("backupSchemaVersion が存在しません")
+        throw IllegalArgumentException(BackupErrorMessages.SCHEMA_KEY_MISSING)
     }
 }

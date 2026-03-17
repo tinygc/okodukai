@@ -1,5 +1,6 @@
 package com.tinygc.okodukai.data.backup
 
+import com.google.gson.annotations.SerializedName
 import com.tinygc.okodukai.data.local.entity.BudgetEntity
 import com.tinygc.okodukai.data.local.entity.CategoryEntity
 import com.tinygc.okodukai.data.local.entity.CategoryOrderEntity
@@ -23,28 +24,30 @@ object BackupSchemas {
 
     const val POLICY_INCLUDED = "INCLUDED"
     const val POLICY_EXCLUDED = "EXCLUDED"
+
+    const val DEFAULT_GOAL_ACHIEVEMENT_MODE = "INDIVIDUAL"
 }
 
 data class BackupSettings(
-    val defaultCategoryId: String? = null,
-    val goalAchievementMode: String = "INDIVIDUAL"
+    @SerializedName("defaultCategoryId") val defaultCategoryId: String? = null,
+    @SerializedName("goalAchievementMode") val goalAchievementMode: String = BackupSchemas.DEFAULT_GOAL_ACHIEVEMENT_MODE
 )
 
 data class BackupPayload(
-    val budgets: List<BudgetEntity> = emptyList(),
-    val expenses: List<ExpenseEntity> = emptyList(),
-    val categories: List<CategoryEntity> = emptyList(),
-    val categoryOrders: List<CategoryOrderEntity> = emptyList(),
-    val templates: List<TemplateEntity> = emptyList(),
-    val incomes: List<IncomeEntity> = emptyList(),
-    val savingGoals: List<SavingGoalEntity> = emptyList(),
-    val settings: BackupSettings = BackupSettings()
+    @SerializedName("budgets") val budgets: List<BudgetEntity> = emptyList(),
+    @SerializedName("expenses") val expenses: List<ExpenseEntity> = emptyList(),
+    @SerializedName("categories") val categories: List<CategoryEntity> = emptyList(),
+    @SerializedName("categoryOrders") val categoryOrders: List<CategoryOrderEntity> = emptyList(),
+    @SerializedName("templates") val templates: List<TemplateEntity> = emptyList(),
+    @SerializedName("incomes") val incomes: List<IncomeEntity> = emptyList(),
+    @SerializedName("savingGoals") val savingGoals: List<SavingGoalEntity> = emptyList(),
+    @SerializedName("settings") val settings: BackupSettings = BackupSettings()
 )
 
 data class BackupDocument(
-    val backupSchemaVersion: Int,
-    val appDataVersion: String,
-    val exportedAt: String,
-    val backupPolicy: Map<String, String>,
-    val payload: BackupPayload
+    @SerializedName("backupSchemaVersion") val backupSchemaVersion: Int,
+    @SerializedName("appDataVersion") val appDataVersion: String,
+    @SerializedName("exportedAt") val exportedAt: String,
+    @SerializedName("backupPolicy") val backupPolicy: Map<String, String>,
+    @SerializedName("payload") val payload: BackupPayload
 )

@@ -19,6 +19,7 @@ import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.CommonStatusCodes
 import com.tinygc.okodukai.data.backup.BackupDocument
+import com.tinygc.okodukai.data.backup.BackupErrorMessages
 import com.tinygc.okodukai.data.backup.BackupJsonCodec
 import com.tinygc.okodukai.data.backup.BackupMigrationDefinitions
 import com.tinygc.okodukai.data.backup.BackupMigrationManager
@@ -130,7 +131,7 @@ class BackupRepositoryImpl @Inject constructor(
             runWithDriveAuthDiagnostics {
                 val drive = buildDriveService()
                 val file = runImportStep("バックアップファイルの検索") {
-                    findBackupFile(drive) ?: throw IllegalStateException("バックアップファイルが見つかりません")
+                    findBackupFile(drive) ?: throw IllegalStateException(BackupErrorMessages.FILE_NOT_FOUND)
                 }
 
                 val normalizedRawJson = runImportStep("バックアップファイルのダウンロード", file) {
@@ -138,7 +139,7 @@ class BackupRepositoryImpl @Inject constructor(
                     drive.files().get(file.id).executeMediaAndDownloadTo(output)
                     normalizeBackupJson(output.toString(Charsets.UTF_8.name()))
                 }
-                val rawJsonDebugInfo = buildBackupJsonDebugSummary(normalizedRawJson)
+                val rawJsonDebugInfo = if (BuildConfig.DEBUG) buildBackupJsonDebugSummary(normalizedRawJson) else null
 
                 val schemaVersion = runImportStep("バックアップスキーマの読取", file, rawJsonDebugInfo) {
                     codec.readSchemaVersion(normalizedRawJson)
@@ -398,7 +399,7 @@ class BackupRepositoryImpl @Inject constructor(
             userPreferencesDataStore.setSettingsSnapshot(
                 UserPreferencesDataStore.SettingsSnapshot(
                     defaultCategoryId = null,
-                    goalAchievementMode = "INDIVIDUAL"
+                    goalAchievementMode = BackupSchemas.DEFAULT_GOAL_ACHIEVEMENT_MODE
                 )
             )
         }
@@ -423,13 +424,13 @@ class BackupRepositoryImpl @Inject constructor(
 
     private fun validateDocument(document: BackupDocument) {
         if (document.backupSchemaVersion <= 0) {
-            throw IllegalArgumentException("バックアップ形式が不正です")
+            throw IllegalArgumentException(BackupErrorMessages.DOCUMENT_INVALID)
         }
         if (document.payload.categories.any { it.id.isBlank() }) {
-            throw IllegalArgumentException("カテゴリデータが不正です")
+            throw IllegalArgumentException(BackupErrorMessages.CATEGORY_DATA_INVALID)
         }
         if (document.payload.expenses.any { it.id.isBlank() || it.date.isBlank() }) {
-            throw IllegalArgumentException("支出データが不正です")
+            throw IllegalArgumentException(BackupErrorMessages.EXPENSE_DATA_INVALID)
         }
     }
 
@@ -447,12 +448,12 @@ class BackupRepositoryImpl @Inject constructor(
         val allowedValues = setOf(BackupSchemas.POLICY_INCLUDED, BackupSchemas.POLICY_EXCLUDED)
 
         if (!document.backupPolicy.keys.containsAll(requiredKeys)) {
-            throw IllegalArgumentException("backupPolicy に必須キーが不足しています")
+            throw IllegalArgumentException(BackupErrorMessages.POLICY_KEYS_MISSING)
         }
 
         document.backupPolicy.forEach { (key, value) ->
             if (key in requiredKeys && value !in allowedValues) {
-                throw IllegalArgumentException("backupPolicy の値が不正です: $key")
+                throw IllegalArgumentException("${BackupErrorMessages.POLICY_VALUE_INVALID_PREFIX}$key")
             }
         }
 
@@ -460,7 +461,7 @@ class BackupRepositoryImpl @Inject constructor(
             .filter { it != BackupSchemas.KEY_SETTINGS }
             .any { document.backupPolicy[it] == BackupSchemas.POLICY_EXCLUDED }
         if (unsupportedExcluded) {
-            throw IllegalArgumentException("settings 以外の EXCLUDED は未対応です")
+            throw IllegalArgumentException(BackupErrorMessages.POLICY_EXCLUDED_UNSUPPORTED)
         }
     }
 }

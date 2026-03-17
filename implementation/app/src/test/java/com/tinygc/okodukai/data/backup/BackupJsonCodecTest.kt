@@ -57,7 +57,7 @@ class BackupJsonCodecTest {
         }.exceptionOrNull()
 
         assertTrue(exception is IllegalArgumentException)
-        assertEquals("バックアップファイルが空です", exception?.message)
+        assertEquals(BackupErrorMessages.FILE_EMPTY, exception?.message)
     }
 
     @Test
@@ -67,7 +67,7 @@ class BackupJsonCodecTest {
         }.exceptionOrNull()
 
         assertTrue(exception is IllegalArgumentException)
-        assertEquals("バックアップJSONの形式が不正です", exception?.message)
+        assertEquals(BackupErrorMessages.JSON_MALFORMED, exception?.message)
     }
 
     @Test
@@ -77,6 +77,53 @@ class BackupJsonCodecTest {
         }.exceptionOrNull()
 
         assertTrue(exception is IllegalArgumentException)
-        assertEquals("backupSchemaVersion の値が不正です", exception?.message)
+        assertEquals(BackupErrorMessages.SCHEMA_VALUE_INVALID, exception?.message)
+    }
+
+    @Test
+    fun `BOM付きJSONでもschemaVersionを読み取れる`() {
+        val json = "\uFEFF{\"backupSchemaVersion\":2}"
+
+        val version = codec.readSchemaVersion(json)
+
+        assertEquals(2, version)
+    }
+
+    @Test
+    fun `schemaKeyもlegacy形式もない場合はSCHEMA_KEY_MISSINGエラー`() {
+        val exception = runCatching {
+            codec.readSchemaVersion("{\"someOtherKey\":1}")
+        }.exceptionOrNull()
+
+        assertTrue(exception is IllegalArgumentException)
+        assertEquals(BackupErrorMessages.SCHEMA_KEY_MISSING, exception?.message)
+    }
+
+    @Test
+    fun `encodeしてdecodeすると同一データが復元できる`() {
+        val original = BackupDocument(
+            backupSchemaVersion = 2,
+            appDataVersion = "4",
+            exportedAt = "2026-03-17T00:00:00",
+            backupPolicy = mapOf("budgets" to "INCLUDED"),
+            payload = BackupPayload()
+        )
+
+        val decoded = codec.decode(codec.encode(original))
+
+        assertEquals(original.backupSchemaVersion, decoded.backupSchemaVersion)
+        assertEquals(original.appDataVersion, decoded.appDataVersion)
+        assertEquals(original.exportedAt, decoded.exportedAt)
+        assertEquals(original.backupPolicy, decoded.backupPolicy)
+    }
+
+    @Test
+    fun `decode_nullはDECODE_NULLエラーを投げる`() {
+        val exception = runCatching {
+            codec.decode("null")
+        }.exceptionOrNull()
+
+        assertTrue(exception is IllegalArgumentException)
+        assertEquals(BackupErrorMessages.DECODE_NULL, exception?.message)
     }
 }

@@ -3,6 +3,7 @@ package com.tinygc.okodukai.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tinygc.okodukai.BuildConfig
+import com.tinygc.okodukai.data.backup.BackupErrorMessages
 import com.tinygc.okodukai.domain.usecase.backup.ClearDriveAccountUseCase
 import com.tinygc.okodukai.domain.usecase.backup.ExportBackupToDriveUseCase
 import com.tinygc.okodukai.domain.usecase.backup.ImportBackupFromDriveUseCase
@@ -114,17 +115,18 @@ class BackupManagementViewModel @Inject constructor(
         val importSpecificMessage = causes
             .mapNotNull { it.message }
             .firstOrNull {
-                it == "バックアップファイルが見つかりません" ||
-                    it == "バックアップファイルが空です" ||
-                    it == "バックアップJSONの形式が不正です" ||
-                    it == "backupSchemaVersion が存在しません" ||
-                    it == "backupSchemaVersion の値が不正です" ||
-                    it == "バックアップ形式が不正です" ||
-                    it == "カテゴリデータが不正です" ||
-                    it == "支出データが不正です" ||
-                    it == "backupPolicy に必須キーが不足しています" ||
-                    it.startsWith("backupPolicy の値が不正です") ||
-                    it == "settings 以外の EXCLUDED は未対応です"
+                it == BackupErrorMessages.FILE_NOT_FOUND ||
+                    it == BackupErrorMessages.FILE_EMPTY ||
+                    it == BackupErrorMessages.JSON_MALFORMED ||
+                    it == BackupErrorMessages.SCHEMA_KEY_MISSING ||
+                    it == BackupErrorMessages.SCHEMA_VALUE_INVALID ||
+                    it == BackupErrorMessages.DECODE_NULL ||
+                    it == BackupErrorMessages.DOCUMENT_INVALID ||
+                    it == BackupErrorMessages.CATEGORY_DATA_INVALID ||
+                    it == BackupErrorMessages.EXPENSE_DATA_INVALID ||
+                    it == BackupErrorMessages.POLICY_KEYS_MISSING ||
+                    it.startsWith(BackupErrorMessages.POLICY_VALUE_INVALID_PREFIX) ||
+                    it == BackupErrorMessages.POLICY_EXCLUDED_UNSUPPORTED
             }
         if (importSpecificMessage != null) {
             return importSpecificMessage
