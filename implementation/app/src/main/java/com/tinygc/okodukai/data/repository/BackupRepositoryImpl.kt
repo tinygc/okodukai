@@ -166,8 +166,11 @@ class BackupRepositoryImpl @Inject constructor(
                     database.withTransaction {
                         clearAllTables()
                         restoreIncludedData(document)
-                        reconstructExcludedData(document)
                     }
+
+                    // DataStore は Room transaction の外で更新し、
+                    // DB transaction 内に別ストレージ I/O を混在させない。
+                    applyImportedSettings(document)
                 }
 
                 "Google Driveから復元しました"
@@ -180,7 +183,7 @@ class BackupRepositoryImpl @Inject constructor(
             block()
         } catch (cancellation: CancellationException) {
             throw cancellation
-        } catch (t: Throwable) {
+        } catch (t: Exception) {
             if (isGoogleKeyAuthError(t)) {
                 throw IllegalStateException("Google認証設定エラーです", t)
             }
@@ -219,7 +222,7 @@ class BackupRepositoryImpl @Inject constructor(
             block()
         } catch (cancellation: CancellationException) {
             throw cancellation
-        } catch (t: Throwable) {
+        } catch (t: Exception) {
             throw IllegalStateException(buildImportStepMessage(step, file, t, debugDetail), t)
         }
     }
@@ -239,23 +242,6 @@ class BackupRepositoryImpl @Inject constructor(
         return "$baseMessage（$fileLabel$detailLabel, type=${t::class.java.simpleName}）"
     }
 
-    private fun buildExceptionDiagnosticLabel(t: Throwable): String {
-        val diagnostics = generateSequence(t) { it.cause }
-            .take(3)
-            .map { throwable ->
-                val type = throwable::class.java.simpleName
-                val status = (throwable as? ApiException)?.statusCode?.let { ",statusCode=$it" }.orEmpty()
-                val message = throwable.message?.replace('\n', ' ')?.take(120).orEmpty()
-                if (message.isBlank()) {
-                    "type=$type$status"
-                } else {
-                    "type=$type$status,message=$message"
-                }
-            }
-            .toList()
-
-        return diagnostics.joinToString(" | ")
-    }
     private fun buildDriveService(): Drive {
         val accountName = driveAccountName ?: throw IllegalStateException("Googleアカウントでサインインしてください")
         val credential = GoogleAccountCredential.usingOAuth2(
@@ -318,27 +304,24 @@ class BackupRepositoryImpl @Inject constructor(
         if (isIncluded(policy, BackupSchemas.KEY_SAVING_GOALS)) {
             document.payload.savingGoals.forEach { savingGoalDao.insert(it) }
         }
-
-        if (isIncluded(policy, BackupSchemas.KEY_SETTINGS)) {
-            userPreferencesDataStore.setSettingsSnapshot(
-                UserPreferencesDataStore.SettingsSnapshot(
-                    defaultCategoryId = document.payload.settings.defaultCategoryId,
-                    goalAchievementMode = document.payload.settings.goalAchievementMode
-                )
-            )
-        }
     }
 
-    private suspend fun reconstructExcludedData(document: BackupDocument) {
+    private suspend fun applyImportedSettings(document: BackupDocument) {
         val policy = document.backupPolicy
-        if (!isIncluded(policy, BackupSchemas.KEY_SETTINGS)) {
-            userPreferencesDataStore.setSettingsSnapshot(
-                UserPreferencesDataStore.SettingsSnapshot(
-                    defaultCategoryId = null,
-                    goalAchievementMode = BackupSchemas.DEFAULT_GOAL_ACHIEVEMENT_MODE
-                )
+
+        val snapshot = if (isIncluded(policy, BackupSchemas.KEY_SETTINGS)) {
+            UserPreferencesDataStore.SettingsSnapshot(
+                defaultCategoryId = document.payload.settings.defaultCategoryId,
+                goalAchievementMode = document.payload.settings.goalAchievementMode
+            )
+        } else {
+            UserPreferencesDataStore.SettingsSnapshot(
+                defaultCategoryId = null,
+                goalAchievementMode = BackupSchemas.DEFAULT_GOAL_ACHIEVEMENT_MODE
             )
         }
+
+        userPreferencesDataStore.setSettingsSnapshot(snapshot)
     }
 
     private fun isIncluded(policy: Map<String, String>, key: String): Boolean {
