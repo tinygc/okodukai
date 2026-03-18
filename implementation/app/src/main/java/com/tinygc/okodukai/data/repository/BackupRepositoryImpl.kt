@@ -1,8 +1,6 @@
 package com.tinygc.okodukai.data.repository
 
 import android.content.Context
-import android.content.pm.PackageManager
-import android.os.Build
 import androidx.room.withTransaction
 import com.tinygc.okodukai.BuildConfig
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
@@ -39,7 +37,6 @@ import com.tinygc.okodukai.domain.repository.BackupRepository
 import com.tinygc.okodukai.domain.util.DateTimeUtil
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.ByteArrayOutputStream
-import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
@@ -139,9 +136,7 @@ class BackupRepositoryImpl @Inject constructor(
                     drive.files().get(file.id).executeMediaAndDownloadTo(output)
                     normalizeBackupJson(output.toString(Charsets.UTF_8.name()))
                 }
-                val rawJsonDebugInfo = if (BuildConfig.DEBUG) buildBackupJsonDebugSummary(normalizedRawJson) else null
-
-                val schemaVersion = runImportStep("バックアップスキーマの読取", file, rawJsonDebugInfo) {
+                val schemaVersion = runImportStep("バックアップスキーマの読取", file) {
                     codec.readSchemaVersion(normalizedRawJson)
                 }
                 val migratedRaw = runImportStep(
@@ -187,16 +182,11 @@ class BackupRepositoryImpl @Inject constructor(
             throw cancellation
         } catch (t: Throwable) {
             if (isGoogleKeyAuthError(t)) {
-                val message = if (BuildConfig.DEBUG) {
-                    "Google認証設定エラーです（${buildSigningDiagnosticLabel()}, ${buildExceptionDiagnosticLabel(t)} を確認してください）"
-                } else {
-                    "Google認証設定エラーです"
-                }
-                throw IllegalStateException(message, t)
+                throw IllegalStateException("Google認証設定エラーです", t)
             }
             if (BuildConfig.DEBUG) {
                 throw IllegalStateException(
-                    "エラーが発生しました（診断情報: ${buildSigningDiagnosticLabel()}, ${buildExceptionDiagnosticLabel(t)}）",
+                    "エラーが発生しました（type=${t::class.java.simpleName}）",
                     t
                 )
             }
@@ -238,39 +228,15 @@ class BackupRepositoryImpl @Inject constructor(
         return rawJson.removePrefix("\uFEFF").trim()
     }
 
-    private fun buildBackupJsonDebugSummary(rawJson: String): String {
-        val head = rawJson
-            .take(120)
-            .replace("\n", "\\n")
-            .replace("\r", "\\r")
-            .replace("\t", "\\t")
-
-        return listOf(
-            "length=${rawJson.length}",
-            "startsWithObject=${rawJson.startsWith("{")}",
-            "hasSchemaKey=${rawJson.contains("\"backupSchemaVersion\"")}",
-            "head=$head"
-        ).joinToString(",")
-    }
-
     private fun buildImportStepMessage(step: String, file: File?, t: Throwable, debugDetail: String? = null): String {
         val baseMessage = "インポート失敗: $step"
         if (!BuildConfig.DEBUG) {
             return baseMessage
         }
 
-        val fileLabel = file?.let {
-            "fileId=${it.id},name=${it.name},modifiedTime=${it.modifiedTime?.value}"
-        } ?: "file=unknown"
-        val detailLabel = debugDetail?.take(300)?.let { ", detail=$it" }.orEmpty()
-        return "$baseMessage（$fileLabel$detailLabel, ${buildExceptionDiagnosticLabel(t)}）"
-    }
-
-    private fun buildSigningDiagnosticLabel(): String {
-        val packageName = context.packageName
-        val fingerprints = getSigningSha1Fingerprints()
-        val fingerprintLabel = if (fingerprints.isEmpty()) "取得失敗" else fingerprints.joinToString(",")
-        return "package=$packageName, SHA-1=$fingerprintLabel"
+        val fileLabel = if (file != null) "file=present" else "file=unknown"
+        val detailLabel = debugDetail?.take(120)?.let { ", detail=$it" }.orEmpty()
+        return "$baseMessage（$fileLabel$detailLabel, type=${t::class.java.simpleName}）"
     }
 
     private fun buildExceptionDiagnosticLabel(t: Throwable): String {
@@ -290,36 +256,6 @@ class BackupRepositoryImpl @Inject constructor(
 
         return diagnostics.joinToString(" | ")
     }
-
-    private fun getSigningSha1Fingerprints(): List<String> {
-        return try {
-            val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                context.packageManager.getPackageInfo(
-                    context.packageName,
-                    PackageManager.PackageInfoFlags.of(PackageManager.GET_SIGNING_CERTIFICATES.toLong())
-                )
-            } else {
-                @Suppress("DEPRECATION")
-                context.packageManager.getPackageInfo(context.packageName, PackageManager.GET_SIGNATURES)
-            }
-
-            val signatures = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                packageInfo.signingInfo?.apkContentsSigners ?: emptyArray()
-            } else {
-                @Suppress("DEPRECATION")
-                packageInfo.signatures ?: emptyArray()
-            }
-
-            signatures.map { signature ->
-                val digest = MessageDigest.getInstance("SHA1")
-                    .digest(signature.toByteArray())
-                digest.joinToString(":") { "%02X".format(it) }
-            }
-        } catch (_: Exception) {
-            emptyList()
-        }
-    }
-
     private fun buildDriveService(): Drive {
         val accountName = driveAccountName ?: throw IllegalStateException("Googleアカウントでサインインしてください")
         val credential = GoogleAccountCredential.usingOAuth2(
