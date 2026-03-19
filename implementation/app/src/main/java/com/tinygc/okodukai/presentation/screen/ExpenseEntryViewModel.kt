@@ -45,6 +45,7 @@ class ExpenseEntryViewModel @Inject constructor(
     init {
         observeCategories()
         observeTemplates()
+        observeQuickInputAmounts()
         applyDefaultCategory()
     }
 
@@ -168,6 +169,14 @@ class ExpenseEntryViewModel @Inject constructor(
         viewModelScope.launch {
             getAllTemplatesUseCase.observe().collect { templates ->
                 _uiState.update { it.copy(templates = templates) }
+            }
+        }
+    }
+
+    private fun observeQuickInputAmounts() {
+        viewModelScope.launch {
+            userPreferencesDataStore.quickInputAmounts.collect { amounts ->
+                _uiState.update { it.copy(quickInputAmounts = amounts) }
             }
         }
     }

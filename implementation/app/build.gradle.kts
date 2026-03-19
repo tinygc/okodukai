@@ -75,10 +75,14 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/DEPENDENCIES"
+            excludes += "/META-INF/LICENSE"
+            excludes += "/META-INF/NOTICE"
         }
     }
 }
@@ -123,6 +127,14 @@ dependencies {
 
     // DataStore
     implementation(libs.datastore.preferences)
+
+    // Backup / Google Drive
+    implementation(libs.gson)
+    implementation(libs.play.services.auth)
+    implementation(libs.google.api.services.drive)
+    implementation(libs.google.http.client.android)
+    implementation(libs.google.http.client.gson)
+    implementation(libs.google.api.client.android)
 
     // Testing
     testImplementation(libs.junit)

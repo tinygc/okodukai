@@ -56,4 +56,10 @@ interface BudgetDao {
      */
     @Query("SELECT * FROM budgets ORDER BY month DESC")
     suspend fun getAll(): List<BudgetEntity>
+
+    /**
+     * 全予算を削除
+     */
+    @Query("DELETE FROM budgets")
+    suspend fun deleteAll()
 }

@@ -2,6 +2,7 @@ package com.tinygc.okodukai.presentation.screen
 
 import com.tinygc.okodukai.domain.model.Category
 import com.tinygc.okodukai.domain.model.Template
+import com.tinygc.okodukai.domain.util.QuickAmountConfig
 
 enum class ExpenseEntryTab {
     Normal,
@@ -17,6 +18,7 @@ data class ExpenseEntryUiState(
     val selectedCategoryId: String? = null,
     val selectedSubCategoryId: String? = null,
     val templates: List<Template> = emptyList(),
+    val quickInputAmounts: List<Int> = QuickAmountConfig.defaults,
     val isSaving: Boolean = false
 )
 

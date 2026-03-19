@@ -90,4 +90,10 @@ interface IncomeDao {
      */
     @Query("SELECT * FROM incomes ORDER BY date DESC")
     fun getAllFlow(): Flow<List<IncomeEntity>>
+
+    /**
+     * 全臨時収入を削除
+     */
+    @Query("DELETE FROM incomes")
+    suspend fun deleteAll()
 }

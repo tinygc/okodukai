@@ -231,66 +231,43 @@ private fun NormalEntryContent(
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            
-            // 第1行: 1, 10, 50
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                QuickAmountButton(
-                    amount = 1,
-                    onClick = { viewModel.onQuickAmountAdd(1) },
-                    modifier = Modifier.weight(1f)
-                )
-                QuickAmountButton(
-                    amount = 10,
-                    onClick = { viewModel.onQuickAmountAdd(10) },
-                    modifier = Modifier.weight(1f)
-                )
-                QuickAmountButton(
-                    amount = 50,
-                    onClick = { viewModel.onQuickAmountAdd(50) },
-                    modifier = Modifier.weight(1f)
-                )
+
+            uiState.quickInputAmounts.take(6).chunked(3).forEach { rowAmounts ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    rowAmounts.forEach { amount ->
+                        QuickAmountButton(
+                            amount = amount,
+                            onClick = { viewModel.onQuickAmountAdd(amount) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    repeat(3 - rowAmounts.size) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
             }
 
-            // 第2行: 100, 300, 500
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                QuickAmountButton(
-                    amount = 100,
-                    onClick = { viewModel.onQuickAmountAdd(100) },
-                    modifier = Modifier.weight(1f)
-                )
-                QuickAmountButton(
-                    amount = 300,
-                    onClick = { viewModel.onQuickAmountAdd(300) },
-                    modifier = Modifier.weight(1f)
-                )
-                QuickAmountButton(
-                    amount = 500,
-                    onClick = { viewModel.onQuickAmountAdd(500) },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-            
-            // 第3行: 1000, 3000, リセット
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                QuickAmountButton(
-                    amount = 1000,
-                    onClick = { viewModel.onQuickAmountAdd(1000) },
-                    modifier = Modifier.weight(1f)
-                )
-                QuickAmountButton(
-                    amount = 3000,
-                    onClick = { viewModel.onQuickAmountAdd(3000) },
-                    modifier = Modifier.weight(1f)
-                )
+                val lastRowAmounts = uiState.quickInputAmounts.drop(6).take(2)
+                lastRowAmounts.forEach { amount ->
+                    QuickAmountButton(
+                        amount = amount,
+                        onClick = { viewModel.onQuickAmountAdd(amount) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                repeat((2 - lastRowAmounts.size).coerceAtLeast(0)) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+
                 OutlinedButton(
                     onClick = { viewModel.onResetAmount() },
                     modifier = Modifier.weight(1f),

@@ -40,6 +40,7 @@
 - 通常入力タブ: カテゴリ選択 -> 金額入力
 - テンプレタブ: テンプレボタンから選択 -> 即時登録
 - 日付変更（デフォルトは当日）
+- クイック入力ボタン8件はユーザー設定値（初期値: 1, 5, 10, 50, 100, 500, 1000, 5000）を表示
 
 ### 2. 月次サマリ
 - 当月の予算、支出、残額を表示
@@ -54,7 +55,7 @@
 
 ### 3. 管理
 - 管理メニューの集約画面
-- テンプレ管理 / カテゴリ管理 / 臨時収入管理 / 月別履歴 / 予算設定
+- テンプレ管理 / カテゴリ管理 / 臨時収入管理 / 月別履歴 / 予算設定 / クイック入力金額設定
 
 ### 4. テンプレ管理
 - テンプレ作成・編集・削除
@@ -89,6 +90,33 @@
 
 ---
 
+## バックアップマイグレーション設計
+
+### バックアップフォーマット方針
+- バックアップJSONは `backupSchemaVersion` を必須とする
+- ルートに `backupPolicy` を持ち、データ集合ごとに `INCLUDED` / `EXCLUDED` を明示する
+- `EXCLUDED` は「復元不要」ではなく「復元時に再構築する前提データ」として扱う
+
+### Importパイプライン
+1. JSON構文チェック
+2. `backupSchemaVersion` 判定
+3. `BackupMigrationStep` を古い順に適用（例: v1->v2, v2->v3）
+4. 正規化済みDTOを検証（必須項目、ID重複、参照整合）
+5. トランザクション内で全置換Import
+6. `EXCLUDED` データの再構築（デフォルト投入、再計算、キャッシュ再生成）
+
+### 互換性ルール
+- backward compatibility: 旧バックアップを新アプリで読めること
+- forward compatibility: 未知フィールドは無視すること
+- breaking change時は `backupSchemaVersion` を更新し、対応Migrationを実装すること
+
+### レイヤ責務
+- Presentation: 進捗表示、失敗時メッセージ
+- Domain: Import/Exportユースケース（Repository呼び出し）
+- Data: JSON I/O、Drive AppData I/O、Migration適用、検証、DB全置換保存
+
+---
+
 ## 画面遷移（概要）
 - 下部タブ: 支出入力 / 月次サマリ / 管理
 - 管理 -> テンプレ管理
@@ -97,6 +125,7 @@
 - 管理 -> 月別履歴
 - 管理 -> 予算設定
 - 管理 -> 貯金目標管理
+- 管理 -> クイック入力金額設定
 - 月次サマリ -> カテゴリ別一覧
 - 月次サマリ -> 支出一覧
 - 支出一覧 -> 支出編集
@@ -149,6 +178,11 @@
 
 ### Template
 - id, name, categoryId, subCategoryId, amount
+
+### UserPreferences
+- defaultCategoryId
+- goalAchievementMode
+- quickInputAmounts (8件、各1〜99999整数)
 
 ---
 

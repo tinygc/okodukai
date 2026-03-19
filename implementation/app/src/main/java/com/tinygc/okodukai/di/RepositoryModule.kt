@@ -1,12 +1,14 @@
 package com.tinygc.okodukai.di
 
 import com.tinygc.okodukai.data.repository.BudgetRepositoryImpl
+import com.tinygc.okodukai.data.repository.BackupRepositoryImpl
 import com.tinygc.okodukai.data.repository.CategoryRepositoryImpl
 import com.tinygc.okodukai.data.repository.ExpenseRepositoryImpl
 import com.tinygc.okodukai.data.repository.IncomeRepositoryImpl
 import com.tinygc.okodukai.data.repository.SavingGoalRepositoryImpl
 import com.tinygc.okodukai.data.repository.TemplateRepositoryImpl
 import com.tinygc.okodukai.domain.repository.BudgetRepository
+import com.tinygc.okodukai.domain.repository.BackupRepository
 import com.tinygc.okodukai.domain.repository.CategoryRepository
 import com.tinygc.okodukai.domain.repository.ExpenseRepository
 import com.tinygc.okodukai.domain.repository.IncomeRepository
@@ -24,6 +26,12 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindBackupRepository(
+        backupRepositoryImpl: BackupRepositoryImpl
+    ): BackupRepository
 
     @Binds
     @Singleton

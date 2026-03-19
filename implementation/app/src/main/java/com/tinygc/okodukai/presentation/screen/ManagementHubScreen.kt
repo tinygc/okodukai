@@ -25,7 +25,9 @@ fun ManagementHubScreen(
     onNavigateToIncome: () -> Unit = {},
     onNavigateToHistory: () -> Unit = {},
     onNavigateToDefaultCategory: () -> Unit = {},
-    onNavigateToSavingGoal: () -> Unit = {}
+    onNavigateToSavingGoal: () -> Unit = {},
+    onNavigateToBackup: () -> Unit = {},
+    onNavigateToQuickAmountSetting: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -52,6 +54,10 @@ fun ManagementHubScreen(
         ManagementHubItem(label = "貯金目標管理", onClick = onNavigateToSavingGoal)
         Spacer(modifier = Modifier.height(8.dp))
         ManagementHubItem(label = "デフォルトカテゴリ設定", onClick = onNavigateToDefaultCategory)
+        Spacer(modifier = Modifier.height(8.dp))
+        ManagementHubItem(label = "バックアップ", onClick = onNavigateToBackup)
+        Spacer(modifier = Modifier.height(8.dp))
+        ManagementHubItem(label = "クイック入力金額設定", onClick = onNavigateToQuickAmountSetting)
     }
 }
 

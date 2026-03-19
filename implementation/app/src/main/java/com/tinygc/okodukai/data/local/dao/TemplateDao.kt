@@ -62,4 +62,10 @@ interface TemplateDao {
      */
     @Query("SELECT * FROM templates WHERE category_id = :categoryId ORDER BY display_order ASC, created_at ASC")
     suspend fun getByCategoryId(categoryId: String): List<TemplateEntity>
+
+    /**
+     * 全テンプレートを削除
+     */
+    @Query("DELETE FROM templates")
+    suspend fun deleteAll()
 }
