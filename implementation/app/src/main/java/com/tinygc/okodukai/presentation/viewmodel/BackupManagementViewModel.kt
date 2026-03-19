@@ -23,6 +23,20 @@ class BackupManagementViewModel @Inject constructor(
     private val importBackupFromDriveUseCase: ImportBackupFromDriveUseCase
 ) : ViewModel() {
 
+    private val importSpecificErrors = setOf(
+        BackupErrorMessages.FILE_NOT_FOUND,
+        BackupErrorMessages.FILE_EMPTY,
+        BackupErrorMessages.JSON_MALFORMED,
+        BackupErrorMessages.SCHEMA_KEY_MISSING,
+        BackupErrorMessages.SCHEMA_VALUE_INVALID,
+        BackupErrorMessages.DECODE_NULL,
+        BackupErrorMessages.DOCUMENT_INVALID,
+        BackupErrorMessages.CATEGORY_DATA_INVALID,
+        BackupErrorMessages.EXPENSE_DATA_INVALID,
+        BackupErrorMessages.POLICY_KEYS_MISSING,
+        BackupErrorMessages.POLICY_EXCLUDED_UNSUPPORTED
+    )
+
     private val _uiState = MutableStateFlow(BackupManagementUiState())
     val uiState: StateFlow<BackupManagementUiState> = _uiState.asStateFlow()
 
@@ -115,18 +129,8 @@ class BackupManagementViewModel @Inject constructor(
         val importSpecificMessage = causes
             .mapNotNull { it.message }
             .firstOrNull {
-                it == BackupErrorMessages.FILE_NOT_FOUND ||
-                    it == BackupErrorMessages.FILE_EMPTY ||
-                    it == BackupErrorMessages.JSON_MALFORMED ||
-                    it == BackupErrorMessages.SCHEMA_KEY_MISSING ||
-                    it == BackupErrorMessages.SCHEMA_VALUE_INVALID ||
-                    it == BackupErrorMessages.DECODE_NULL ||
-                    it == BackupErrorMessages.DOCUMENT_INVALID ||
-                    it == BackupErrorMessages.CATEGORY_DATA_INVALID ||
-                    it == BackupErrorMessages.EXPENSE_DATA_INVALID ||
-                    it == BackupErrorMessages.POLICY_KEYS_MISSING ||
-                    it.startsWith(BackupErrorMessages.POLICY_VALUE_INVALID_PREFIX) ||
-                    it == BackupErrorMessages.POLICY_EXCLUDED_UNSUPPORTED
+                it in importSpecificErrors ||
+                    it.startsWith(BackupErrorMessages.POLICY_VALUE_INVALID_PREFIX)
             }
         if (importSpecificMessage != null) {
             return importSpecificMessage
