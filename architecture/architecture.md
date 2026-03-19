@@ -112,8 +112,8 @@
 
 ### レイヤ責務
 - Presentation: 進捗表示、失敗時メッセージ
-- Domain: Import/Exportユースケース、Migration適用、検証
-- Data: JSON I/O、Drive AppData I/O、DB全置換保存
+- Domain: Import/Exportユースケース（Repository呼び出し）
+- Data: JSON I/O、Drive AppData I/O、Migration適用、検証、DB全置換保存
 
 ---
 

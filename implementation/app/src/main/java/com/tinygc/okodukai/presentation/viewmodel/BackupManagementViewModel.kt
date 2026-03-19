@@ -29,12 +29,12 @@ class BackupManagementViewModel @Inject constructor(
         BackupErrorMessages.JSON_MALFORMED,
         BackupErrorMessages.SCHEMA_KEY_MISSING,
         BackupErrorMessages.SCHEMA_VALUE_INVALID,
+        BackupErrorMessages.UNSUPPORTED_SCHEMA_VERSION,
         BackupErrorMessages.DECODE_NULL,
         BackupErrorMessages.DOCUMENT_INVALID,
         BackupErrorMessages.CATEGORY_DATA_INVALID,
         BackupErrorMessages.EXPENSE_DATA_INVALID,
-        BackupErrorMessages.POLICY_KEYS_MISSING,
-        BackupErrorMessages.POLICY_EXCLUDED_UNSUPPORTED
+        BackupErrorMessages.POLICY_KEYS_MISSING
     )
 
     private val _uiState = MutableStateFlow(BackupManagementUiState())
@@ -134,6 +134,13 @@ class BackupManagementViewModel @Inject constructor(
             }
         if (importSpecificMessage != null) {
             return importSpecificMessage
+        }
+
+        val migrationDefinitionMessage = causes
+            .mapNotNull { it.message }
+            .firstOrNull { it.startsWith(BackupErrorMessages.MIGRATION_DEFINITION_MISSING_PREFIX) }
+        if (migrationDefinitionMessage != null) {
+            return migrationDefinitionMessage
         }
 
         val importStepMessage = causes

@@ -162,18 +162,26 @@ class BackupRepositoryImpl @Inject constructor(
                     validatePolicyForImport(document)
                 }
 
-                runImportStep("端末データへの反映", file) {
+                runImportStep("端末データへの反映（DB）", file) {
                     database.withTransaction {
                         clearAllTables()
                         restoreIncludedData(document)
                     }
+                }
 
+                val settingsWarning = try {
                     // DataStore は Room transaction の外で更新し、
                     // DB transaction 内に別ストレージ I/O を混在させない。
                     applyImportedSettings(document)
+                    null
+                } catch (cancellation: CancellationException) {
+                    throw cancellation
+                } catch (_: Exception) {
+                    "設定の復元に失敗しました（データ本体は復元済み）"
                 }
 
-                "Google Driveから復元しました"
+                settingsWarning?.let { "Google Driveから復元しました（$it）" }
+                    ?: "Google Driveから復元しました"
             }
         }
     }
@@ -308,16 +316,19 @@ class BackupRepositoryImpl @Inject constructor(
 
     private suspend fun applyImportedSettings(document: BackupDocument) {
         val policy = document.backupPolicy
+        val currentSnapshot = userPreferencesDataStore.getSettingsSnapshot()
 
         val snapshot = if (isIncluded(policy, BackupSchemas.KEY_SETTINGS)) {
             UserPreferencesDataStore.SettingsSnapshot(
                 defaultCategoryId = document.payload.settings.defaultCategoryId,
-                goalAchievementMode = document.payload.settings.goalAchievementMode
+                goalAchievementMode = document.payload.settings.goalAchievementMode,
+                quickInputAmounts = currentSnapshot.quickInputAmounts
             )
         } else {
             UserPreferencesDataStore.SettingsSnapshot(
                 defaultCategoryId = null,
-                goalAchievementMode = BackupSchemas.DEFAULT_GOAL_ACHIEVEMENT_MODE
+                goalAchievementMode = BackupSchemas.DEFAULT_GOAL_ACHIEVEMENT_MODE,
+                quickInputAmounts = currentSnapshot.quickInputAmounts
             )
         }
 
@@ -374,13 +385,6 @@ class BackupRepositoryImpl @Inject constructor(
             if (key in requiredKeys && value !in allowedValues) {
                 throw IllegalArgumentException("${BackupErrorMessages.POLICY_VALUE_INVALID_PREFIX}$key")
             }
-        }
-
-        val unsupportedExcluded = requiredKeys
-            .filter { it != BackupSchemas.KEY_SETTINGS }
-            .any { document.backupPolicy[it] == BackupSchemas.POLICY_EXCLUDED }
-        if (unsupportedExcluded) {
-            throw IllegalArgumentException(BackupErrorMessages.POLICY_EXCLUDED_UNSUPPORTED)
         }
     }
 }

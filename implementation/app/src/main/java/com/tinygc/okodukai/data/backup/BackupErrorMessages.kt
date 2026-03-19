@@ -18,4 +18,6 @@ internal object BackupErrorMessages {
     const val POLICY_KEYS_MISSING = "backupPolicy に必須キーが不足しています"
     const val POLICY_VALUE_INVALID_PREFIX = "backupPolicy の値が不正です: "
     const val POLICY_EXCLUDED_UNSUPPORTED = "settings 以外の EXCLUDED は未対応です"
+    const val UNSUPPORTED_SCHEMA_VERSION = "このバックアップバージョンには未対応です"
+    const val MIGRATION_DEFINITION_MISSING_PREFIX = "マイグレーション定義がありません"
 }

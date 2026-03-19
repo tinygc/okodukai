@@ -139,7 +139,7 @@
 ### バックアップメタデータモデル
 - バックアップJSONのルートに以下を持つ
 	- `backupSchemaVersion`: Int（必須）
-	- `appDataVersion`: String（任意、アプリ内部データ版）
+	- `appDataVersion`: String（必須、アプリ内部データ版）
 	- `exportedAt`: String（ISO-8601）
 	- `backupPolicy`: Object（データ集合ごとに INCLUDED/EXCLUDED）
 
@@ -151,7 +151,7 @@
 	"backupPolicy": {
 		"budgets": "INCLUDED",
 		"expenses": "INCLUDED",
-		"settingsCache": "EXCLUDED"
+		"settings": "EXCLUDED"
 	}
 }
 ```

@@ -24,18 +24,18 @@ object BackupMigrationDefinitions {
         root.toString()
     }
 
-        private fun defaultPolicyJson() =
+    private fun defaultPolicyJson() =
         JsonParser.parseString(
             """
             {
-                            "${BackupSchemas.KEY_BUDGETS}": "${BackupSchemas.POLICY_INCLUDED}",
-                            "${BackupSchemas.KEY_EXPENSES}": "${BackupSchemas.POLICY_INCLUDED}",
-                            "${BackupSchemas.KEY_CATEGORIES}": "${BackupSchemas.POLICY_INCLUDED}",
-                            "${BackupSchemas.KEY_CATEGORY_ORDERS}": "${BackupSchemas.POLICY_INCLUDED}",
-                            "${BackupSchemas.KEY_TEMPLATES}": "${BackupSchemas.POLICY_INCLUDED}",
-                            "${BackupSchemas.KEY_INCOMES}": "${BackupSchemas.POLICY_INCLUDED}",
-                            "${BackupSchemas.KEY_SAVING_GOALS}": "${BackupSchemas.POLICY_INCLUDED}",
-                            "${BackupSchemas.KEY_SETTINGS}": "${BackupSchemas.POLICY_INCLUDED}"
+                "${BackupSchemas.KEY_BUDGETS}": "${BackupSchemas.POLICY_INCLUDED}",
+                "${BackupSchemas.KEY_EXPENSES}": "${BackupSchemas.POLICY_INCLUDED}",
+                "${BackupSchemas.KEY_CATEGORIES}": "${BackupSchemas.POLICY_INCLUDED}",
+                "${BackupSchemas.KEY_CATEGORY_ORDERS}": "${BackupSchemas.POLICY_INCLUDED}",
+                "${BackupSchemas.KEY_TEMPLATES}": "${BackupSchemas.POLICY_INCLUDED}",
+                "${BackupSchemas.KEY_INCOMES}": "${BackupSchemas.POLICY_INCLUDED}",
+                "${BackupSchemas.KEY_SAVING_GOALS}": "${BackupSchemas.POLICY_INCLUDED}",
+                "${BackupSchemas.KEY_SETTINGS}": "${BackupSchemas.POLICY_INCLUDED}"
             }
             """.trimIndent()
         ).asJsonObject
