@@ -103,9 +103,8 @@ fun MainScreen() {
                     onNavigateToHistory = { navController.navigate("monthly_history") },
                     onNavigateToDefaultCategory = { navController.navigate("default_category_setting") },
                     onNavigateToSavingGoal = { navController.navigate("saving_goal_management") },
-                    onNavigateToQuickAmountSetting = { navController.navigate("quick_amount_setting") }
-                    onNavigateToBackup = { navController.navigate("backup_management") },
-                    onNavigateToQuickAmountSetting = { navController.navigate("quick_amount_setting") }
+                    onNavigateToQuickAmountSetting = { navController.navigate("quick_amount_setting") },
+                    onNavigateToBackup = { navController.navigate("backup_management") }
                 )
             }
             composable("category_management") {

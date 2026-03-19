@@ -63,6 +63,9 @@ class BackupJsonCodec(
     private fun parseRootObject(normalized: String): JsonObject {
         return try {
             val element = JsonParser.parseString(normalized)
+            if (element.isJsonNull) {
+                throw IllegalArgumentException(BackupErrorMessages.DECODE_NULL)
+            }
             if (!element.isJsonObject) {
                 throw IllegalArgumentException(BackupErrorMessages.JSON_MALFORMED)
             }
