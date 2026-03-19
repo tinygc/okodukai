@@ -14,10 +14,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.tinygc.okodukai.domain.util.DateTimeUtil
 import com.tinygc.okodukai.presentation.navigation.BottomNavDestination
 import com.tinygc.okodukai.presentation.screen.BudgetSettingScreen
 import com.tinygc.okodukai.presentation.screen.BackupManagementScreen
 import com.tinygc.okodukai.presentation.screen.CategoryManagementScreen
+import com.tinygc.okodukai.presentation.screen.CategoryListScreen
 import com.tinygc.okodukai.presentation.screen.DefaultCategorySettingScreen
 import com.tinygc.okodukai.presentation.screen.ExpenseEntryScreen
 import com.tinygc.okodukai.presentation.screen.ExpenseListScreen
@@ -28,6 +30,16 @@ import com.tinygc.okodukai.presentation.screen.MonthlySummaryScreen
 import com.tinygc.okodukai.presentation.screen.QuickAmountSettingScreen
 import com.tinygc.okodukai.presentation.screen.SavingGoalManagementScreen
 import com.tinygc.okodukai.presentation.screen.TemplateManagementScreen
+
+private val monthArgRegex = Regex("^\\d{4}-\\d{2}$")
+
+internal fun resolveMonthArg(rawMonth: String?): String {
+    val fallback = DateTimeUtil.getCurrentMonth()
+    return if (rawMonth != null && monthArgRegex.matches(rawMonth)) rawMonth else fallback
+}
+
+internal fun buildCategoryListRoute(month: String): String = "category_list/${resolveMonthArg(month)}"
+internal fun buildExpenseListRoute(month: String): String = "expense_list/${resolveMonthArg(month)}"
 
 @Composable
 fun MainScreen() {
@@ -82,11 +94,20 @@ fun MainScreen() {
             composable(BottomNavDestination.Summary.route) {
                 MonthlySummaryScreen(
                     paddingValues = paddingValues,
-                    onNavigateToExpenseList = { month -> navController.navigate("expense_list/$month") }
+                    onNavigateToExpenseList = { month -> navController.navigate(buildExpenseListRoute(month)) },
+                    onNavigateToCategoryList = { month -> navController.navigate(buildCategoryListRoute(month)) }
+                )
+            }
+            composable("category_list/{month}") { backStackEntry ->
+                val month = resolveMonthArg(backStackEntry.arguments?.getString("month"))
+                CategoryListScreen(
+                    paddingValues = paddingValues,
+                    month = month,
+                    onBack = { navController.popBackStack() }
                 )
             }
             composable("expense_list/{month}") { backStackEntry ->
-                val month = backStackEntry.arguments?.getString("month") ?: ""
+                val month = resolveMonthArg(backStackEntry.arguments?.getString("month"))
                 ExpenseListScreen(
                     paddingValues = paddingValues,
                     month = month,

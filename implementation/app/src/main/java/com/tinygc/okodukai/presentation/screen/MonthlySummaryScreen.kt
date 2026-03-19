@@ -36,6 +36,7 @@ import java.util.*
 fun MonthlySummaryScreen(
     paddingValues: PaddingValues,
     onNavigateToExpenseList: (String) -> Unit = {},
+    onNavigateToCategoryList: (String) -> Unit = {},
     viewModel: MonthlySummaryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -51,7 +52,7 @@ fun MonthlySummaryScreen(
             viewModel.onUpdateExpense(expenseItem, date, amount, memo)
         },
         onDeleteExpense = { viewModel.onDeleteExpense(it.id) },
-        onShowAllCategories = {},
+        onShowAllCategories = { onNavigateToCategoryList(uiState.month) },
         onShowAllExpenses = { onNavigateToExpenseList(uiState.month) }
     )
 }
