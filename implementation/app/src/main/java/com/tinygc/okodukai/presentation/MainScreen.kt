@@ -25,6 +25,7 @@ import com.tinygc.okodukai.presentation.screen.IncomeManagementScreen
 import com.tinygc.okodukai.presentation.screen.ManagementHubScreen
 import com.tinygc.okodukai.presentation.screen.MonthlyHistoryScreen
 import com.tinygc.okodukai.presentation.screen.MonthlySummaryScreen
+import com.tinygc.okodukai.presentation.screen.QuickAmountSettingScreen
 import com.tinygc.okodukai.presentation.screen.SavingGoalManagementScreen
 import com.tinygc.okodukai.presentation.screen.TemplateManagementScreen
 
@@ -102,7 +103,9 @@ fun MainScreen() {
                     onNavigateToHistory = { navController.navigate("monthly_history") },
                     onNavigateToDefaultCategory = { navController.navigate("default_category_setting") },
                     onNavigateToSavingGoal = { navController.navigate("saving_goal_management") },
-                    onNavigateToBackup = { navController.navigate("backup_management") }
+                    onNavigateToQuickAmountSetting = { navController.navigate("quick_amount_setting") }
+                    onNavigateToBackup = { navController.navigate("backup_management") },
+                    onNavigateToQuickAmountSetting = { navController.navigate("quick_amount_setting") }
                 )
             }
             composable("category_management") {
@@ -149,6 +152,12 @@ fun MainScreen() {
             }
             composable("backup_management") {
                 BackupManagementScreen(
+                    paddingValues = paddingValues,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable("quick_amount_setting") {
+                QuickAmountSettingScreen(
                     paddingValues = paddingValues,
                     onBack = { navController.popBackStack() }
                 )

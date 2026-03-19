@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.tinygc.okodukai.domain.util.QuickAmountConfig
 import com.tinygc.okodukai.domain.model.GoalAchievementMode
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.Flow
@@ -18,6 +19,7 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "us
 object PreferenceKeys {
     val DEFAULT_CATEGORY_ID = stringPreferencesKey("default_category_id")
     val GOAL_ACHIEVEMENT_MODE = stringPreferencesKey("goal_achievement_mode")
+    val QUICK_INPUT_AMOUNTS = stringPreferencesKey("quick_input_amounts")
 }
 
 @Singleton
@@ -26,7 +28,8 @@ class UserPreferencesDataStore @Inject constructor(
 ) {
     data class SettingsSnapshot(
         val defaultCategoryId: String?,
-        val goalAchievementMode: String
+        val goalAchievementMode: String,
+        val quickInputAmounts: List<Int>
     )
 
     val defaultCategoryId: Flow<String?> = context.dataStore.data.map { prefs ->
@@ -35,6 +38,10 @@ class UserPreferencesDataStore @Inject constructor(
 
     val goalAchievementMode: Flow<String> = context.dataStore.data.map { prefs ->
         prefs[PreferenceKeys.GOAL_ACHIEVEMENT_MODE] ?: GoalAchievementMode.INDIVIDUAL.name
+    }
+
+    val quickInputAmounts: Flow<List<Int>> = context.dataStore.data.map { prefs ->
+        QuickAmountConfig.deserialize(prefs[PreferenceKeys.QUICK_INPUT_AMOUNTS])
     }
 
     suspend fun setDefaultCategoryId(id: String?) {
@@ -53,12 +60,24 @@ class UserPreferencesDataStore @Inject constructor(
         }
     }
 
+    suspend fun setQuickInputAmounts(amounts: List<Int>) {
+        val normalized = if (QuickAmountConfig.isValid(amounts)) {
+            amounts
+        } else {
+            QuickAmountConfig.defaults
+        }
+        context.dataStore.edit { prefs ->
+            prefs[PreferenceKeys.QUICK_INPUT_AMOUNTS] = QuickAmountConfig.serialize(normalized)
+        }
+    }
+
     suspend fun getSettingsSnapshot(): SettingsSnapshot {
         val prefs = context.dataStore.data.first()
         return SettingsSnapshot(
             defaultCategoryId = prefs[PreferenceKeys.DEFAULT_CATEGORY_ID],
             goalAchievementMode = prefs[PreferenceKeys.GOAL_ACHIEVEMENT_MODE]
-                ?: GoalAchievementMode.INDIVIDUAL.name
+                ?: GoalAchievementMode.INDIVIDUAL.name,
+            quickInputAmounts = QuickAmountConfig.deserialize(prefs[PreferenceKeys.QUICK_INPUT_AMOUNTS])
         )
     }
 
@@ -70,6 +89,7 @@ class UserPreferencesDataStore @Inject constructor(
                 prefs.remove(PreferenceKeys.DEFAULT_CATEGORY_ID)
             }
             prefs[PreferenceKeys.GOAL_ACHIEVEMENT_MODE] = snapshot.goalAchievementMode
+            prefs[PreferenceKeys.QUICK_INPUT_AMOUNTS] = QuickAmountConfig.serialize(snapshot.quickInputAmounts)
         }
     }
 }
