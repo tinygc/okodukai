@@ -13,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -38,27 +39,44 @@ fun ManagementHubScreen(
         Text(
             text = "管理",
             style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
-            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold
         )
         Spacer(modifier = Modifier.height(12.dp))
+
+        ManagementHubSectionTitle(title = "家計管理")
+        ManagementHubItem(label = "予算設定", onClick = onNavigateToBudget)
+        Spacer(modifier = Modifier.height(8.dp))
+        ManagementHubItem(label = "月別履歴", onClick = onNavigateToHistory)
+        Spacer(modifier = Modifier.height(8.dp))
+        ManagementHubItem(label = "臨時収入管理", onClick = onNavigateToIncome)
+        Spacer(modifier = Modifier.height(8.dp))
+        ManagementHubItem(label = "貯金目標管理", onClick = onNavigateToSavingGoal)
+        Spacer(modifier = Modifier.height(8.dp))
+
+        ManagementHubSectionTitle(title = "入力設定")
         ManagementHubItem(label = "カテゴリ管理", onClick = onNavigateToCategory)
         Spacer(modifier = Modifier.height(8.dp))
         ManagementHubItem(label = "テンプレ管理", onClick = onNavigateToTemplate)
         Spacer(modifier = Modifier.height(8.dp))
-        ManagementHubItem(label = "予算設定", onClick = onNavigateToBudget)
-        Spacer(modifier = Modifier.height(8.dp))
-        ManagementHubItem(label = "臨時収入管理", onClick = onNavigateToIncome)
-        Spacer(modifier = Modifier.height(8.dp))
-        ManagementHubItem(label = "月次履歴", onClick = onNavigateToHistory)
-        Spacer(modifier = Modifier.height(8.dp))
-        ManagementHubItem(label = "貯金目標管理", onClick = onNavigateToSavingGoal)
-        Spacer(modifier = Modifier.height(8.dp))
         ManagementHubItem(label = "デフォルトカテゴリ設定", onClick = onNavigateToDefaultCategory)
         Spacer(modifier = Modifier.height(8.dp))
-        ManagementHubItem(label = "バックアップ", onClick = onNavigateToBackup)
-        Spacer(modifier = Modifier.height(8.dp))
         ManagementHubItem(label = "クイック入力金額設定", onClick = onNavigateToQuickAmountSetting)
+        Spacer(modifier = Modifier.height(8.dp))
+
+        ManagementHubSectionTitle(title = "データ管理")
+        ManagementHubItem(label = "バックアップ", onClick = onNavigateToBackup)
     }
+}
+
+@Composable
+private fun ManagementHubSectionTitle(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleSmall.copy(fontSize = 14.sp),
+        color = MaterialTheme.colorScheme.onSurface,
+        fontWeight = FontWeight.Medium,
+        modifier = Modifier.padding(vertical = 8.dp)
+    )
 }
 
 @Composable

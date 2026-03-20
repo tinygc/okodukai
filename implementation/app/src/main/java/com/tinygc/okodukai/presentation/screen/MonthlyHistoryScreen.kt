@@ -43,7 +43,7 @@ fun MonthlyHistoryScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "月次履歴",
+                    text = "月別履歴",
                     style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
                     fontWeight = FontWeight.SemiBold
                 )
