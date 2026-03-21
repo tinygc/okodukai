@@ -133,6 +133,7 @@ class AddExpenseUseCaseTest {
  */
 class FakeExpenseRepository : ExpenseRepository {
     val expenses = mutableListOf<Expense>()
+    var shouldFailGetAllExpenses = false
 
     override suspend fun saveExpense(expense: Expense): Result<Unit> {
         val index = expenses.indexOfFirst { it.id == expense.id }
@@ -186,6 +187,9 @@ class FakeExpenseRepository : ExpenseRepository {
     }
 
     override suspend fun getAllExpenses(): Result<List<Expense>> {
+        if (shouldFailGetAllExpenses) {
+            return Result.failure(IllegalStateException("getAllExpenses failed"))
+        }
         return Result.success(expenses)
     }
 }

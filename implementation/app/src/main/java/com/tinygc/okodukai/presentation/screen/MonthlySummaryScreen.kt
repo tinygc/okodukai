@@ -2,21 +2,47 @@ package com.tinygc.okodukai.presentation.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -25,12 +51,13 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.tinygc.okodukai.domain.model.GoalAchievementMode
 import com.tinygc.okodukai.domain.util.DateTimeUtil
-import com.tinygc.okodukai.presentation.viewmodel.MonthlySummaryViewModel
+import com.tinygc.okodukai.presentation.viewmodel.CategoryTotalUiModel
 import com.tinygc.okodukai.presentation.viewmodel.ExpenseItem
 import com.tinygc.okodukai.presentation.viewmodel.MonthlySummaryUiState
+import com.tinygc.okodukai.presentation.viewmodel.MonthlySummaryViewModel
 import com.tinygc.okodukai.presentation.viewmodel.SavingGoalProgressUiModel
 import java.text.NumberFormat
-import java.util.*
+import java.util.Locale
 
 @Composable
 fun MonthlySummaryScreen(
@@ -41,6 +68,7 @@ fun MonthlySummaryScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val currentMonth = DateTimeUtil.getCurrentMonth()
+
     MonthlySummaryContent(
         paddingValues = paddingValues,
         uiState = uiState,
@@ -80,6 +108,8 @@ internal fun MonthlySummaryContent(
     var editAmountInput by remember { mutableStateOf("") }
     var editMemoInput by remember { mutableStateOf("") }
 
+    val latestExpenses = uiState.expenseItems.sortedByDescending { it.date }.take(5)
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -87,7 +117,6 @@ internal fun MonthlySummaryContent(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Month selector
         item {
             MonthSelector(
                 currentMonth = uiState.month,
@@ -98,7 +127,6 @@ internal fun MonthlySummaryContent(
             )
         }
 
-        // Budget summary cards
         item {
             BudgetSummaryCard(
                 budget = uiState.budget ?: 0,
@@ -122,7 +150,6 @@ internal fun MonthlySummaryContent(
             )
         }
 
-        // Category totals
         item {
             Text(
                 text = "カテゴリ別支出",
@@ -131,6 +158,7 @@ internal fun MonthlySummaryContent(
                 modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
             )
         }
+
         if (uiState.topCategories.isEmpty() && uiState.otherTotal == 0) {
             item {
                 Text(
@@ -141,7 +169,7 @@ internal fun MonthlySummaryContent(
                 )
             }
         } else {
-            items(uiState.topCategories) { categoryTotal ->
+            items(uiState.topCategories) { categoryTotal: CategoryTotalUiModel ->
                 CategoryTotalItem(
                     categoryName = categoryTotal.categoryName ?: "未分類",
                     amount = categoryTotal.totalAmount,
@@ -171,7 +199,6 @@ internal fun MonthlySummaryContent(
             }
         }
 
-        // Expense list
         item {
             Text(
                 text = "支出一覧",
@@ -180,7 +207,7 @@ internal fun MonthlySummaryContent(
                 modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
             )
         }
-        val latestExpenses = uiState.expenseItems.sortedByDescending { it.date }.take(5)
+
         if (latestExpenses.isEmpty()) {
             item {
                 Text(
@@ -222,7 +249,6 @@ internal fun MonthlySummaryContent(
             }
         }
 
-        // Error message
         uiState.errorMessage?.let { error ->
             item {
                 Surface(
@@ -240,13 +266,11 @@ internal fun MonthlySummaryContent(
             }
         }
 
-        // Bottom padding
         item {
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
 
-    // Loading indicator
     if (uiState.isLoading) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -256,12 +280,11 @@ internal fun MonthlySummaryContent(
         }
     }
 
-    // Delete confirmation dialog
     if (showDeleteDialog && expenseToDelete != null) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = { Text("支出を削除") },
-            text = { Text("この支出を削除してもよろしいですか？") },
+            text = { Text("この支出を削除しますか？") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -295,7 +318,7 @@ internal fun MonthlySummaryContent(
                     )
                     OutlinedTextField(
                         value = editAmountInput,
-                        onValueChange = { editAmountInput = it.filter { ch -> ch.isDigit() } },
+                        onValueChange = { editAmountInput = it.filter(Char::isDigit) },
                         label = { Text("金額") },
                         singleLine = true
                     )
@@ -314,7 +337,12 @@ internal fun MonthlySummaryContent(
                         if (editDateInput.isBlank() || amount == null || amount <= 0) {
                             return@TextButton
                         }
-                        onUpdateExpense(expenseToEdit!!, editDateInput, amount, editMemoInput.ifBlank { null })
+                        onUpdateExpense(
+                            expenseToEdit!!,
+                            editDateInput,
+                            amount,
+                            editMemoInput.ifBlank { null }
+                        )
                         showEditDialog = false
                         expenseToEdit = null
                     }
@@ -388,6 +416,7 @@ private fun MonthSelector(
                     )
                 }
             }
+
             if (showBackToCurrentMonth) {
                 Text(
                     text = "今月に戻る",
@@ -441,7 +470,7 @@ private fun BudgetSummaryCard(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "残額",
+                text = "今月の残り予算",
                 style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp),
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -452,7 +481,6 @@ private fun BudgetSummaryCard(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSecondaryContainer
             )
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -461,9 +489,7 @@ private fun BudgetSummaryCard(
                 BudgetSubRow("予算", budget, currencyFormatter)
                 BudgetSubRow("支出", totalExpense, currencyFormatter)
             }
-
             ProgressBar(progress = progress)
-
             if (totalIncome > 0) {
                 BudgetSubRow("臨時収入", totalIncome, currencyFormatter)
             }
@@ -485,63 +511,209 @@ private fun SavingsProgressCard(
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp)),
+            .clip(RoundedCornerShape(20.dp)),
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 3.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                text = "貯金目標",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = "繰越残高: ${currencyFormatter.format(carryOverBalance)}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = "目標に使える金額: ${currencyFormatter.format(savingsAvailable)}",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "貯金目標",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                SavingsModeBadge(mode = goalAchievementMode)
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                SavingsSummaryMetricCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    label = "繰越金",
+                    amountText = currencyFormatter.format(carryOverBalance)
+                )
+            }
 
             if (savingGoals.isEmpty()) {
-                Text(
-                    text = "貯金目標が未登録です",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.surface,
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text(
+                        text = "貯金目標が未登録です",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
                 return@Column
             }
 
             when (goalAchievementMode) {
                 GoalAchievementMode.INDIVIDUAL -> {
                     savingGoals.forEach { goal ->
-                        val status = if (goal.isAchieved) "達成" else "あと ${currencyFormatter.format(goal.remainingAmount)}"
-                        Text(
-                            text = "${goal.name}: ${status}",
-                            style = MaterialTheme.typography.bodySmall
-                        )
+                        SavingGoalProgressCard(goal = goal, currencyFormatter = currencyFormatter)
                     }
                 }
 
                 GoalAchievementMode.TOTAL -> {
-                    val status = if (isSavingGoalAchieved) "達成" else "あと ${currencyFormatter.format(totalSavingRemaining)}"
-                    Text(
-                        text = "合計目標: ${currencyFormatter.format(totalSavingTarget)}",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Text(
-                        text = "達成状況: $status",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Medium
+                    TotalSavingProgressCard(
+                        totalSavingTarget = totalSavingTarget,
+                        totalSavingRemaining = totalSavingRemaining,
+                        isSavingGoalAchieved = isSavingGoalAchieved,
+                        currencyFormatter = currencyFormatter
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SavingsModeBadge(mode: GoalAchievementMode) {
+    Surface(
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        shape = RoundedCornerShape(999.dp)
+    ) {
+        Text(
+            text = if (mode == GoalAchievementMode.INDIVIDUAL) "個別達成中" else "合計達成中",
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+        )
+    }
+}
+
+@Composable
+private fun SavingsSummaryMetricCard(
+    modifier: Modifier = Modifier,
+    label: String,
+    amountText: String,
+    emphasize: Boolean = false
+) {
+    Surface(
+        modifier = modifier,
+        color = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = amountText,
+                style = if (emphasize) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge,
+                fontWeight = if (emphasize) FontWeight.Bold else FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+@Composable
+private fun SavingGoalProgressCard(
+    goal: SavingGoalProgressUiModel,
+    currencyFormatter: NumberFormat
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = goal.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Surface(
+                    color = if (goal.isAchieved) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.secondaryContainer
+                    },
+                    shape = RoundedCornerShape(999.dp)
+                ) {
+                    Text(
+                        text = if (goal.isAchieved) "達成" else "あと ${currencyFormatter.format(goal.remainingAmount)}",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                    )
+                }
+            }
+            Text(
+                text = "目標金額: ${currencyFormatter.format(goal.targetAmount)}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun TotalSavingProgressCard(
+    totalSavingTarget: Int,
+    totalSavingRemaining: Int,
+    isSavingGoalAchieved: Boolean,
+    currencyFormatter: NumberFormat
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                text = "合計目標",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = currencyFormatter.format(totalSavingTarget),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+            HorizontalDivider()
+            Text(
+                text = "達成状況",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = if (isSavingGoalAchieved) "達成" else "あと ${currencyFormatter.format(totalSavingRemaining)}",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
         }
     }
 }
@@ -553,14 +725,12 @@ private fun BudgetSubRow(
     currencyFormatter: NumberFormat
 ) {
     Row(
-        modifier = Modifier,
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
-            fontWeight = FontWeight.Normal,
             color = MaterialTheme.colorScheme.onSecondaryContainer
         )
         Text(
@@ -686,42 +856,23 @@ private fun ExpenseListItem(
                 }
                 Text(
                     text = formatDateDisplay(expense.date),
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                IconButton(
-                    onClick = onEdit,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Edit,
-                        contentDescription = "編集",
-                        modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+
+            Row {
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, contentDescription = "編集")
                 }
-                IconButton(
-                    onClick = onDelete,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = "削除",
-                        modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.error
-                    )
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = "削除")
                 }
             }
         }
     }
 }
 
-// Helper functions
 private fun getPreviousMonth(currentMonth: String): String {
     return try {
         val parts = currentMonth.split("-")

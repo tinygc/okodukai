@@ -220,7 +220,7 @@ class MonthlySummaryViewModelTest {
         // Then
         val state2 = viewModel.uiState.value
         assertEquals(feb, state2.month)
-        assertEquals(99000, state2.budget)
+        assertEquals(50000, state2.budget)
         assertEquals(2000, state2.totalExpense)
     }
 
@@ -384,12 +384,12 @@ class MonthlySummaryViewModelTest {
 
         // Then
         val state = viewModel.uiState.value
-        // 残額 = 予算 - 支出 + 収入 = 50000 - 30000 + 20000 = 40000
+        // 残額 = 予算 - 支出 + 臨時収入 = 50000 - 30000 + 20000 = 40000
         assertEquals(40000, state.remainingBudget)
     }
 
     @Test
-    fun `臨時収入が繰越金として翌月に反映されること`() = runTest {
+    fun `繰越があっても予算表示は固定額のままであること`() = runTest {
         // Given
         val budget = Budget("b1", "2026-01", 50000, "2026-01-01T00:00:00", "2026-01-01T00:00:00")
         fakeBudgetRepository.addBudget(budget)
@@ -419,8 +419,8 @@ class MonthlySummaryViewModelTest {
 
         // Then
         val state = viewModel.uiState.value
-        // 2月: 予算 50000 + 繰越 40000 = 90000
-        assertEquals(90000, state.budget)
+        assertEquals(50000, state.budget)
+        assertEquals(90000, state.carryOverBalance)
     }
 }
 

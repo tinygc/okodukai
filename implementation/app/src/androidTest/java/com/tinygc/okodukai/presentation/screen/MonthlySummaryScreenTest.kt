@@ -9,9 +9,11 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
+import com.tinygc.okodukai.domain.model.GoalAchievementMode
 import com.tinygc.okodukai.presentation.viewmodel.CategoryTotalUiModel
 import com.tinygc.okodukai.presentation.viewmodel.ExpenseItem
 import com.tinygc.okodukai.presentation.viewmodel.MonthlySummaryUiState
+import com.tinygc.okodukai.presentation.viewmodel.SavingGoalProgressUiModel
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -273,7 +275,172 @@ class MonthlySummaryScreenTest {
         }
     }
 
-    private fun assertTextDisplayed(text: String) {
-        composeRule.onAllNodesWithText(text)[0].assertIsDisplayed()
+    @Test
+    fun savingsCardDisplaysIndividualModeAndGoalCards() {
+        val uiState = MonthlySummaryUiState(
+            month = "2026-02",
+            budget = 50000,
+            totalExpense = 1200,
+            remainingBudget = 48800,
+            carryOverBalance = 3000,
+            savingsAvailable = 8000,
+            goalAchievementMode = GoalAchievementMode.INDIVIDUAL,
+            savingGoals = listOf(
+                SavingGoalProgressUiModel(
+                    id = "g1",
+                    name = "イヤホン",
+                    targetAmount = 12000,
+                    remainingAmount = 4000,
+                    isAchieved = false
+                ),
+                SavingGoalProgressUiModel(
+                    id = "g2",
+                    name = "キーボード",
+                    targetAmount = 8000,
+                    remainingAmount = 0,
+                    isAchieved = true
+                )
+            )
+        )
+
+        composeRule.setContent {
+            MaterialTheme {
+                MonthlySummaryContent(
+                    paddingValues = androidx.compose.foundation.layout.PaddingValues(0.dp),
+                    uiState = uiState,
+                    onPreviousMonth = {},
+                    onNextMonth = {},
+                    onBackToCurrentMonth = {},
+                    showBackToCurrentMonth = false,
+                    onUpdateExpense = { _, _, _, _ -> },
+                    onDeleteExpense = {},
+                    onShowAllCategories = {},
+                    onShowAllExpenses = {}
+                )
+            }
+        }
+
+        assertTextDisplayed("個別達成中")
+        assertTextDisplayed("繰越金")
+        assertTextDisplayed("イヤホン")
+        assertTextDisplayed("目標金額")
+        assertTextDisplayed("あと", substring = true)
+        assertTextDisplayed("キーボード")
+        assertTextDisplayed("達成")
+    }
+
+    @Test
+    fun budgetCardDisplaysMonthlyRemainingBudgetLabel() {
+        val uiState = MonthlySummaryUiState(
+            month = "2026-02",
+            budget = 50000,
+            totalExpense = 1200,
+            remainingBudget = 48800,
+            expenseItems = emptyList()
+        )
+
+        composeRule.setContent {
+            MaterialTheme {
+                MonthlySummaryContent(
+                    paddingValues = androidx.compose.foundation.layout.PaddingValues(0.dp),
+                    uiState = uiState,
+                    onPreviousMonth = {},
+                    onNextMonth = {},
+                    onBackToCurrentMonth = {},
+                    showBackToCurrentMonth = false,
+                    onUpdateExpense = { _, _, _, _ -> },
+                    onDeleteExpense = {},
+                    onShowAllCategories = {},
+                    onShowAllExpenses = {}
+                )
+            }
+        }
+
+        assertTextDisplayed("今月の残り予算")
+    }
+
+    @Test
+    fun savingsCardDisplaysTotalModeSummary() {
+        val uiState = MonthlySummaryUiState(
+            month = "2026-02",
+            budget = 50000,
+            totalExpense = 1200,
+            remainingBudget = 48800,
+            carryOverBalance = 3000,
+            savingsAvailable = 8000,
+            goalAchievementMode = GoalAchievementMode.TOTAL,
+            totalSavingTarget = 15000,
+            totalSavingRemaining = 7000,
+            isSavingGoalAchieved = false,
+            savingGoals = listOf(
+                SavingGoalProgressUiModel(
+                    id = "g1",
+                    name = "イヤホン",
+                    targetAmount = 12000,
+                    remainingAmount = 4000,
+                    isAchieved = false
+                )
+            )
+        )
+
+        composeRule.setContent {
+            MaterialTheme {
+                MonthlySummaryContent(
+                    paddingValues = androidx.compose.foundation.layout.PaddingValues(0.dp),
+                    uiState = uiState,
+                    onPreviousMonth = {},
+                    onNextMonth = {},
+                    onBackToCurrentMonth = {},
+                    showBackToCurrentMonth = false,
+                    onUpdateExpense = { _, _, _, _ -> },
+                    onDeleteExpense = {},
+                    onShowAllCategories = {},
+                    onShowAllExpenses = {}
+                )
+            }
+        }
+
+        assertTextDisplayed("合計達成中")
+        assertTextDisplayed("合計目標")
+        assertTextDisplayed("達成状況")
+        assertTextDisplayed("あと", substring = true)
+    }
+
+    @Test
+    fun savingsCardDisplaysEmptyStateWhenNoGoalsRegistered() {
+        val uiState = MonthlySummaryUiState(
+            month = "2026-02",
+            budget = 50000,
+            totalExpense = 1200,
+            remainingBudget = 48800,
+            carryOverBalance = 0,
+            savingsAvailable = 0,
+            goalAchievementMode = GoalAchievementMode.INDIVIDUAL,
+            savingGoals = emptyList()
+        )
+
+        composeRule.setContent {
+            MaterialTheme {
+                MonthlySummaryContent(
+                    paddingValues = androidx.compose.foundation.layout.PaddingValues(0.dp),
+                    uiState = uiState,
+                    onPreviousMonth = {},
+                    onNextMonth = {},
+                    onBackToCurrentMonth = {},
+                    showBackToCurrentMonth = false,
+                    onUpdateExpense = { _, _, _, _ -> },
+                    onDeleteExpense = {},
+                    onShowAllCategories = {},
+                    onShowAllExpenses = {}
+                )
+            }
+        }
+
+        assertTextDisplayed("個別達成中")
+        assertTextDisplayed("貯金目標が未登録です")
+    }
+
+    private fun assertTextDisplayed(text: String, substring: Boolean = false) {
+        composeRule.onAllNodesWithText(text, substring = substring)[0].assertIsDisplayed()
     }
 }

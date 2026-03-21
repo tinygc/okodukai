@@ -171,7 +171,7 @@ class GetMonthlySummaryUseCaseTest {
     }
 
     @Test
-    fun `前月の残予算が当月予算へ繰り越されること`() = runTest {
+    fun `前月残額があっても当月予算は固定額のまま表示されること`() = runTest {
         // Given
         val budget = Budget("b1", "2026-01", 50000, "2026-01-01T00:00:00", "2026-01-01T00:00:00")
         fakeBudgetRepository.addBudget(budget)
@@ -179,7 +179,7 @@ class GetMonthlySummaryUseCaseTest {
         val category = Category("cat1", "食費", null, "", "")
         fakeCategoryRepository.addCategory(category)
 
-        // 1月: 10,000円使用 -> 40,000円繰越
+        // 1月: 10,000円使用
         fakeExpenseRepository.expenses.add(
             Expense("e1", "2026-01-10", 10000, "cat1", null, null, false, "", "")
         )
@@ -194,13 +194,13 @@ class GetMonthlySummaryUseCaseTest {
         // Then
         assertTrue(result.isSuccess)
         val summary = result.getOrThrow()
-        assertEquals(90000, summary.budget) // 50,000 + 40,000
+        assertEquals(50000, summary.budget)
         assertEquals(20000, summary.totalExpense)
-        assertEquals(70000, summary.remainingBudget)
+        assertEquals(30000, summary.remainingBudget)
     }
 
     @Test
-    fun `予算不足は繰り越さず翌月繰越は0になること`() = runTest {
+    fun `前月が予算超過でも当月予算は固定額のまま表示されること`() = runTest {
         // Given
         val budget = Budget("b1", "2026-01", 30000, "2026-01-01T00:00:00", "2026-01-01T00:00:00")
         fakeBudgetRepository.addBudget(budget)
@@ -208,7 +208,7 @@ class GetMonthlySummaryUseCaseTest {
         val category = Category("cat1", "食費", null, "", "")
         fakeCategoryRepository.addCategory(category)
 
-        // 1月: 50,000円使用 -> -20,000円だが繰越は0
+        // 1月: 50,000円使用
         fakeExpenseRepository.expenses.add(
             Expense("e1", "2026-01-10", 50000, "cat1", null, null, false, "", "")
         )
@@ -222,6 +222,56 @@ class GetMonthlySummaryUseCaseTest {
         assertEquals(30000, summary.budget)
         assertEquals(0, summary.totalExpense)
         assertEquals(30000, summary.remainingBudget)
+    }
+
+    @Test
+    fun `getAllExpensesが失敗しても当月サマリ取得は成功すること`() = runTest {
+        // Given
+        val month = "2026-02"
+        fakeBudgetRepository.addBudget(Budget("b1", month, 50000, "", ""))
+
+        val category = Category("cat1", "食費", null, "", "")
+        fakeCategoryRepository.addCategory(category)
+        fakeExpenseRepository.expenses.add(
+            Expense("e1", "$month-01", 1200, "cat1", null, null, false, "", "")
+        )
+        fakeExpenseRepository.shouldFailGetAllExpenses = true
+
+        // When
+        val result = getMonthlySummaryUseCase(month)
+
+        // Then
+        assertTrue(result.isSuccess)
+        val summary = result.getOrThrow()
+        assertEquals(50000, summary.budget)
+        assertEquals(1200, summary.totalExpense)
+        assertEquals(48800, summary.remainingBudget)
+    }
+
+    @Test
+    fun `臨時収入が残予算に反映されること`() = runTest {
+        // Given
+        val month = "2026-02"
+        fakeBudgetRepository.addBudget(Budget("b1", month, 50000, "", ""))
+
+        val category = Category("cat1", "食費", null, "", "")
+        fakeCategoryRepository.addCategory(category)
+        
+        val expense = Expense("e1", "$month-01", 30000, "cat1", null, null, false, "", "")
+        fakeExpenseRepository.expenses.add(expense)
+        
+        val income = com.tinygc.okodukai.domain.model.Income("inc1", "$month-10", 20000, "ボーナス", "", "")
+        fakeIncomeRepository.incomes.add(income)
+
+        // When
+        val result = getMonthlySummaryUseCase(month)
+
+        // Then
+        assertTrue(result.isSuccess)
+        val summary = result.getOrThrow()
+        assertEquals(50000, summary.budget)
+        assertEquals(30000, summary.totalExpense)
+        assertEquals(40000, summary.remainingBudget) // 50000 - 30000 + 20000
     }
 
     @Test
