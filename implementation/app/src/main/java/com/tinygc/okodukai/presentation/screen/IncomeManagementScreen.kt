@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.tinygc.okodukai.domain.model.Income
+import com.tinygc.okodukai.presentation.component.DatePickerField
 import com.tinygc.okodukai.presentation.viewmodel.IncomeManagementViewModel
 import java.text.NumberFormat
 import java.util.*
@@ -352,13 +353,11 @@ private fun AddIncomeDialog(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                OutlinedTextField(
-                    value = dateInput,
-                    onValueChange = onDateChange,
-                    label = { Text("日付 (YYYY-MM-DD)") },
+                DatePickerField(
+                    dateValue = dateInput,
+                    onDateSelected = onDateChange,
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = !isSaving,
-                    singleLine = true
+                    enabled = !isSaving
                 )
 
                 OutlinedTextField(

@@ -20,6 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.tinygc.okodukai.presentation.component.DatePickerField
 import com.tinygc.okodukai.presentation.viewmodel.ExpenseItem
 import com.tinygc.okodukai.presentation.viewmodel.MonthlySummaryViewModel
 import java.text.NumberFormat
@@ -152,11 +153,9 @@ fun ExpenseListScreen(
             title = { Text("支出を編集") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = editDateInput,
-                        onValueChange = { editDateInput = it },
-                        label = { Text("日付 (YYYY-MM-DD)") },
-                        singleLine = true
+                    DatePickerField(
+                        dateValue = editDateInput,
+                        onDateSelected = { editDateInput = it }
                     )
                     OutlinedTextField(
                         value = editAmountInput,

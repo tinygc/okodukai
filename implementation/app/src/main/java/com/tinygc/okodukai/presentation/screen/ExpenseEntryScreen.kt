@@ -16,18 +16,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedButton
@@ -39,7 +34,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -57,11 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.collectAsState
-import com.tinygc.okodukai.domain.util.DateTimeUtil
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import com.tinygc.okodukai.presentation.component.DatePickerField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -151,67 +141,15 @@ private fun NormalEntryContent(
 ) {
     var categoryExpanded by remember { mutableStateOf(false) }
     var subCategoryExpanded by remember { mutableStateOf(false) }
-    var showDatePicker by remember { mutableStateOf(false) }
-
-    // DatePickerの初期値を現在の日付から設定
-    val today = LocalDate.parse(DateTimeUtil.getCurrentDate())
-    val initialMillis = today.atStartOfDay(ZoneId.of("Asia/Tokyo")).toInstant().toEpochMilli()
-    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
-    val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
     // 日付フィールド (タップでDatePickerを開く) - 一番上に配置
-    OutlinedTextField(
-        value = uiState.dateInput,
-        onValueChange = {},
-        readOnly = true,
-        label = { Text("日付", style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp)) },
-        trailingIcon = {
-            Icon(
-                imageVector = Icons.Filled.CalendarMonth,
-                contentDescription = "カレンダーを開く",
-                modifier = Modifier.clickable { showDatePicker = true },
-                tint = MaterialTheme.colorScheme.primary
-            )
-        },
-        singleLine = true,
+    DatePickerField(
+        dateValue = uiState.dateInput,
+        onDateSelected = viewModel::onDateChange,
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 16.dp)
-            .clickable { showDatePicker = true },
-        textStyle = MaterialTheme.typography.titleMedium.copy(
-            fontWeight = FontWeight.Medium,
-            fontSize = 20.sp
-        )
     )
-
-    // DatePickerDialog
-    if (showDatePicker) {
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        datePickerState.selectedDateMillis?.let { millis ->
-                            val selectedDate = Instant.ofEpochMilli(millis)
-                                .atZone(ZoneId.of("Asia/Tokyo"))
-                                .toLocalDate()
-                            viewModel.onDateChange(selectedDate.format(dateFormatter))
-                        }
-                        showDatePicker = false
-                    }
-                ) {
-                    Text("OK")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text("キャンセル")
-                }
-            }
-        ) {
-            DatePicker(state = datePickerState)
-        }
-    }
 
     // クイック金額入力ボタン
     Surface(
@@ -373,73 +311,18 @@ private fun NormalEntryContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TemplateEntryContent(
     uiState: ExpenseEntryUiState,
     viewModel: ExpenseEntryViewModel
 ) {
-    var showDatePicker by remember { mutableStateOf(false) }
-
-    // DatePickerの初期値を現在の日付から設定
-    val today = LocalDate.parse(DateTimeUtil.getCurrentDate())
-    val initialMillis = today.atStartOfDay(ZoneId.of("Asia/Tokyo")).toInstant().toEpochMilli()
-    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
-    val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         // 日付フィールド (タップでDatePickerを開く) - テンプレタブにも表示
-        OutlinedTextField(
-            value = uiState.dateInput,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text("日付", style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp)) },
-            trailingIcon = {
-                Icon(
-                    imageVector = Icons.Filled.CalendarMonth,
-                    contentDescription = "カレンダーを開く",
-                    modifier = Modifier.clickable { showDatePicker = true },
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            },
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { showDatePicker = true },
-            textStyle = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Medium,
-                fontSize = 20.sp
-            )
+        DatePickerField(
+            dateValue = uiState.dateInput,
+            onDateSelected = viewModel::onDateChange,
+            modifier = Modifier.fillMaxWidth()
         )
-
-        // DatePickerDialog
-        if (showDatePicker) {
-            DatePickerDialog(
-                onDismissRequest = { showDatePicker = false },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            datePickerState.selectedDateMillis?.let { millis ->
-                                val selectedDate = Instant.ofEpochMilli(millis)
-                                    .atZone(ZoneId.of("Asia/Tokyo"))
-                                    .toLocalDate()
-                                viewModel.onDateChange(selectedDate.format(dateFormatter))
-                            }
-                            showDatePicker = false
-                        }
-                    ) {
-                        Text("OK")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDatePicker = false }) {
-                        Text("キャンセル")
-                    }
-                }
-            ) {
-                DatePicker(state = datePickerState)
-            }
-        }
 
         if (uiState.templates.isEmpty()) {
             Text(
