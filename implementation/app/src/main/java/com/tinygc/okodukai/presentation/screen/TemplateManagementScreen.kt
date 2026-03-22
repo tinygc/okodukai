@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.tinygc.okodukai.domain.model.Category
 import com.tinygc.okodukai.domain.model.Template
+import com.tinygc.okodukai.presentation.viewmodel.MainScreenViewModel
 import sh.calvin.reorderable.ReorderableCollectionItemScope
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -55,10 +56,16 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 fun TemplateManagementScreen(
     paddingValues: PaddingValues,
     viewModel: TemplateManagementViewModel = hiltViewModel(),
+    mainScreenViewModel: MainScreenViewModel = hiltViewModel(),
     onBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+
+    // テンプレ管理画面への訪問を記録
+    LaunchedEffect(Unit) {
+        mainScreenViewModel.markTemplateManagementVisited()
+    }
 
     var showAddDialog by remember { mutableStateOf(false) }
     var editTemplate by remember { mutableStateOf<Template?>(null) }

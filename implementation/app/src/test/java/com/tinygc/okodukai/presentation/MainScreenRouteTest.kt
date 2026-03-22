@@ -22,4 +22,19 @@ class MainScreenRouteTest {
 
         assertEquals(currentMonth, resolved)
     }
+
+
+    @Test
+    fun initialSetupRouteBudgetReturnsBudgetRoute() {
+        val route = initialSetupRoute(InitialSetupDestination.BUDGET)
+
+        assertEquals("budget_setting", route)
+    }
+
+    @Test
+    fun initialSetupRouteTemplateReturnsTemplateRoute() {
+        val route = initialSetupRoute(InitialSetupDestination.TEMPLATE)
+
+        assertEquals("template_management", route)
+    }
 }

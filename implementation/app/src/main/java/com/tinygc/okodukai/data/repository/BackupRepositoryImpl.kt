@@ -322,13 +322,15 @@ class BackupRepositoryImpl @Inject constructor(
             UserPreferencesDataStore.SettingsSnapshot(
                 defaultCategoryId = document.payload.settings.defaultCategoryId,
                 goalAchievementMode = document.payload.settings.goalAchievementMode,
-                quickInputAmounts = currentSnapshot.quickInputAmounts
+                quickInputAmounts = currentSnapshot.quickInputAmounts,
+                hideInitialSetupAnnouncement = currentSnapshot.hideInitialSetupAnnouncement
             )
         } else {
             UserPreferencesDataStore.SettingsSnapshot(
                 defaultCategoryId = null,
                 goalAchievementMode = BackupSchemas.DEFAULT_GOAL_ACHIEVEMENT_MODE,
-                quickInputAmounts = currentSnapshot.quickInputAmounts
+                quickInputAmounts = currentSnapshot.quickInputAmounts,
+                hideInitialSetupAnnouncement = currentSnapshot.hideInitialSetupAnnouncement
             )
         }
 

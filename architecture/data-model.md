@@ -196,3 +196,9 @@
 - 月次集計はdateのYYYY-MMでフィルタする
 - 貯金目標進捗の原資は「予算 + 臨時収入 - 支出（分類済み）」を月次で累積した値を使用する
 - 月次差分がマイナスの場合もそのまま翌月へ繰り越す
+
+### UserPreferences（DataStore）
+- `default_category_id`: String?（デフォルトカテゴリ）
+- `goal_achievement_mode`: String（目標達成モード）
+- `quick_input_amounts`: String（クイック入力8件のシリアライズ値）
+- `has_visited_template_management`: Boolean（テンプレ管理画面を表示済みか）
