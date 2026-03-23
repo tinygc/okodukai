@@ -37,4 +37,40 @@ class MainScreenRouteTest {
 
         assertEquals("template_management", route)
     }
+
+    @Test
+    fun shouldRenderInitialSetupDialogShowsWhenForced() {
+        val result = shouldRenderInitialSetupDialog(
+            shouldShowByRule = false,
+            isOnMainTab = true,
+            dismissUntilLeaveMainTabs = false,
+            forceShowDialog = true
+        )
+
+        assertEquals(true, result)
+    }
+
+    @Test
+    fun shouldRenderInitialSetupDialogHidesWhenDismissedInMainTabs() {
+        val result = shouldRenderInitialSetupDialog(
+            shouldShowByRule = true,
+            isOnMainTab = true,
+            dismissUntilLeaveMainTabs = true,
+            forceShowDialog = false
+        )
+
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun shouldRenderInitialSetupDialogHidesOutsideMainTabs() {
+        val result = shouldRenderInitialSetupDialog(
+            shouldShowByRule = true,
+            isOnMainTab = false,
+            dismissUntilLeaveMainTabs = false,
+            forceShowDialog = false
+        )
+
+        assertEquals(false, result)
+    }
 }

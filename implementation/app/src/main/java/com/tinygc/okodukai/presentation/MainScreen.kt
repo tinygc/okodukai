@@ -65,6 +65,15 @@ internal fun resolveMonthArg(rawMonth: String?): String {
 
 internal fun buildCategoryListRoute(month: String): String = "category_list/${resolveMonthArg(month)}"
 internal fun buildExpenseListRoute(month: String): String = "expense_list/${resolveMonthArg(month)}"
+internal fun shouldRenderInitialSetupDialog(
+    shouldShowByRule: Boolean,
+    isOnMainTab: Boolean,
+    dismissUntilLeaveMainTabs: Boolean,
+    forceShowDialog: Boolean
+): Boolean {
+    return isOnMainTab && !dismissUntilLeaveMainTabs && (forceShowDialog || shouldShowByRule)
+}
+
 internal fun initialSetupRoute(destination: InitialSetupDestination): String {
     return when (destination) {
         InitialSetupDestination.BUDGET -> ROUTE_BUDGET_SETTING
@@ -77,24 +86,37 @@ fun MainScreen(
     viewModel: MainScreenViewModel = hiltViewModel()
 ) {
     val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
     val shouldShowDialog by viewModel.shouldShowInitialSetupDialog.collectAsState()
-    var showInitialSetupDialog by rememberSaveable { mutableStateOf(false) }
     var doNotShowAgain by rememberSaveable { mutableStateOf(false) }
+    var dismissInitialSetupUntilLeaveMainTabs by rememberSaveable { mutableStateOf(false) }
+    var forceShowInitialSetupDialog by rememberSaveable { mutableStateOf(false) }
     val items = listOf(
         BottomNavDestination.Expense,
         BottomNavDestination.Summary,
         BottomNavDestination.Management
     )
+    val isOnMainTab = currentDestination?.hierarchy?.any { destination ->
+        items.any { it.route == destination.route }
+    } == true
+    val showInitialSetupDialog = shouldRenderInitialSetupDialog(
+        shouldShowByRule = shouldShowDialog,
+        isOnMainTab = isOnMainTab,
+        dismissUntilLeaveMainTabs = dismissInitialSetupUntilLeaveMainTabs,
+        forceShowDialog = forceShowInitialSetupDialog
+    )
 
-    LaunchedEffect(shouldShowDialog) {
-        showInitialSetupDialog = shouldShowDialog
+    LaunchedEffect(isOnMainTab) {
+        if (!isOnMainTab) {
+            dismissInitialSetupUntilLeaveMainTabs = false
+            forceShowInitialSetupDialog = false
+        }
     }
 
     Scaffold(
         bottomBar = {
             NavigationBar {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentDestination = navBackStackEntry?.destination
                 items.forEach { destination ->
                     val selected = currentDestination?.hierarchy?.any { it.route == destination.route } == true
                     NavigationBarItem(
@@ -165,7 +187,13 @@ fun MainScreen(
                     onNavigateToDefaultCategory = { navController.navigate("default_category_setting") },
                     onNavigateToSavingGoal = { navController.navigate("saving_goal_management") },
                     onNavigateToQuickAmountSetting = { navController.navigate("quick_amount_setting") },
-                    onNavigateToBackup = { navController.navigate("backup_management") }
+                    onNavigateToBackup = { navController.navigate("backup_management") },
+                    onShowInitialSetupGuide = {
+                        viewModel.showInitialSetupAnnouncementAgain()
+                        doNotShowAgain = false
+                        dismissInitialSetupUntilLeaveMainTabs = false
+                        forceShowInitialSetupDialog = true
+                    }
                 )
             }
             composable("category_management") {
@@ -177,6 +205,7 @@ fun MainScreen(
             composable(ROUTE_TEMPLATE_MANAGEMENT) {
                 TemplateManagementScreen(
                     paddingValues = paddingValues,
+                    onVisited = { viewModel.markTemplateManagementVisited() },
                     onBack = { navController.popBackStack() }
                 )
             }
@@ -227,7 +256,8 @@ fun MainScreen(
 
     if (showInitialSetupDialog) {
         val applyHideSelectionAndClose = {
-            showInitialSetupDialog = false
+            dismissInitialSetupUntilLeaveMainTabs = true
+            forceShowInitialSetupDialog = false
             if (doNotShowAgain) {
                 viewModel.hideInitialSetupAnnouncement()
             }

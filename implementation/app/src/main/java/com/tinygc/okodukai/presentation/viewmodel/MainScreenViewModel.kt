@@ -14,6 +14,20 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+internal fun calculateShouldShowInitialSetupDialog(
+    hideFlag: Boolean?,
+    templateVisited: Boolean,
+    budgetExists: Boolean
+): Boolean {
+    if (hideFlag == null) {
+        return false
+    }
+    if (hideFlag) {
+        return false
+    }
+    return !budgetExists || !templateVisited
+}
+
 @HiltViewModel
 class MainScreenViewModel @Inject constructor(
     private val userPreferencesDataStore: UserPreferencesDataStore,
@@ -40,19 +54,11 @@ class MainScreenViewModel @Inject constructor(
         templateManagementVisited,
         budgetRepository.observeBudgetByMonth(DateTimeUtil.getCurrentMonth())
     ) { hideFlag, templateVisited, budget ->
-        // ローディング中は表示しない
-        if (hideFlag == null) {
-            return@combine false
-        }
-
-        // ユーザーが「今後表示しない」をチェックしていれば非表示
-        if (hideFlag == true) {
-            return@combine false
-        }
-
-        // 未設定条件：予算未設定 OR テンプレ未訪問
-        val budgetExists = budget != null
-        (!budgetExists) || (!templateVisited)
+        calculateShouldShowInitialSetupDialog(
+            hideFlag = hideFlag,
+            templateVisited = templateVisited,
+            budgetExists = budget != null
+        )
     }
         .stateIn(
             scope = viewModelScope,
@@ -63,6 +69,12 @@ class MainScreenViewModel @Inject constructor(
     fun hideInitialSetupAnnouncement() {
         viewModelScope.launch {
             userPreferencesDataStore.setHideInitialSetupAnnouncement(true)
+        }
+    }
+
+    fun showInitialSetupAnnouncementAgain() {
+        viewModelScope.launch {
+            userPreferencesDataStore.setHideInitialSetupAnnouncement(false)
         }
     }
 

@@ -28,7 +28,8 @@ fun ManagementHubScreen(
     onNavigateToDefaultCategory: () -> Unit = {},
     onNavigateToSavingGoal: () -> Unit = {},
     onNavigateToBackup: () -> Unit = {},
-    onNavigateToQuickAmountSetting: () -> Unit = {}
+    onNavigateToQuickAmountSetting: () -> Unit = {},
+    onShowInitialSetupGuide: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -65,6 +66,8 @@ fun ManagementHubScreen(
 
         ManagementHubSectionTitle(title = "データ管理")
         ManagementHubItem(label = "バックアップ", onClick = onNavigateToBackup)
+        Spacer(modifier = Modifier.height(8.dp))
+        ManagementHubItem(label = "初期設定ガイドを再表示", onClick = onShowInitialSetupGuide)
     }
 }
 

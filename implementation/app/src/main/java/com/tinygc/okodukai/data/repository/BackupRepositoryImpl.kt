@@ -59,7 +59,10 @@ class BackupRepositoryImpl @Inject constructor(
 
     private val codec = BackupJsonCodec()
     private val migrationManager = BackupMigrationManager(
-        migrationSteps = mapOf(1 to BackupMigrationDefinitions.V1_TO_V2)
+        migrationSteps = mapOf(
+            1 to BackupMigrationDefinitions.V1_TO_V2,
+            2 to BackupMigrationDefinitions.V2_TO_V3
+        )
     )
 
     @Volatile
@@ -94,7 +97,9 @@ class BackupRepositoryImpl @Inject constructor(
                         savingGoals = savingGoalDao.getAll(),
                         settings = BackupSettings(
                             defaultCategoryId = settings.defaultCategoryId,
-                            goalAchievementMode = settings.goalAchievementMode
+                            goalAchievementMode = settings.goalAchievementMode,
+                            hideInitialSetupAnnouncement = settings.hideInitialSetupAnnouncement,
+                            templateManagementVisited = settings.templateManagementVisited
                         )
                     )
                 )
@@ -323,14 +328,16 @@ class BackupRepositoryImpl @Inject constructor(
                 defaultCategoryId = document.payload.settings.defaultCategoryId,
                 goalAchievementMode = document.payload.settings.goalAchievementMode,
                 quickInputAmounts = currentSnapshot.quickInputAmounts,
-                hideInitialSetupAnnouncement = currentSnapshot.hideInitialSetupAnnouncement
+                hideInitialSetupAnnouncement = document.payload.settings.hideInitialSetupAnnouncement,
+                templateManagementVisited = document.payload.settings.templateManagementVisited
             )
         } else {
             UserPreferencesDataStore.SettingsSnapshot(
                 defaultCategoryId = null,
                 goalAchievementMode = BackupSchemas.DEFAULT_GOAL_ACHIEVEMENT_MODE,
                 quickInputAmounts = currentSnapshot.quickInputAmounts,
-                hideInitialSetupAnnouncement = currentSnapshot.hideInitialSetupAnnouncement
+                hideInitialSetupAnnouncement = false,
+                templateManagementVisited = false
             )
         }
 

@@ -73,8 +73,9 @@ shouldShowInitialSetupDialog =
 | 今後表示しない（チェック） | `hideInitialSetupAnnouncement = true` を永続化 | - | - |
 
 ### ダイアログ表示中の下部タブ操作
-- 「支出入力」「月次サマリ」「管理」タブをタップ
-- **結果**: ダイアログは消えて、該当タブの画面に遷移
+- `AlertDialog` を使用するモーダル表示とする
+- ダイアログ表示中は、下部タブや背面画面の操作はできない
+- 画面遷移したい場合は「予算設定へ」「テンプレ管理へ」「あとで」のいずれかを選択する
 
 ---
 
@@ -194,6 +195,28 @@ LaunchedEffect(Unit) {
 | 予算設定から戻る | MainScreenViewModel | shouldShowInitialSetupDialog（budgetExists が変わる） | NavigationEffect |
 | テンプレ管理から戻る | MainScreenViewModel | shouldShowInitialSetupDialog（templateManagementVisited が既に変わっている） | NavigationEffect |
 | 「管理」から予算設定（初期設定ダイアログ経由ではない） | MainScreenViewModel | shouldShowInitialSetupDialog | 戻る時 |
+
+---
+
+## 優先ルール
+- `hideInitialSetupAnnouncement = true` の場合、`budgetExists` と `templateManagementVisited` が未達でもダイアログを表示しない。
+- つまり表示優先順位は以下とする。
+  1. `hideInitialSetupAnnouncement` の値
+  2. `budgetExists` / `templateManagementVisited` の自動判定
+
+---
+
+## 設定からの再表示
+
+### 設定画面項目
+- 項目名: 初期設定ガイドを再表示
+- 動作: `hideInitialSetupAnnouncement = false` を保存
+
+### 再表示フロー
+1. ユーザーが設定画面で「初期設定ガイドを再表示」を選択
+2. `hideInitialSetupAnnouncement` が false になる
+3. 次回 MainScreen 表示時に通常判定へ復帰
+4. `!budgetExists || !templateManagementVisited` ならダイアログを表示
 
 ---
 

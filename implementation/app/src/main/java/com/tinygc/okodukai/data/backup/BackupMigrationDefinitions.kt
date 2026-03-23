@@ -24,6 +24,24 @@ object BackupMigrationDefinitions {
         root.toString()
     }
 
+    val V2_TO_V3 = BackupMigrationStep { rawJson ->
+        val root = JsonParser.parseString(rawJson).asJsonObject
+        val payload = root.getAsJsonObject("payload")
+            ?: throw IllegalArgumentException("payload が存在しません")
+        val settings = payload.getAsJsonObject("settings")
+            ?: throw IllegalArgumentException("settings が存在しません")
+
+        if (!settings.has("hideInitialSetupAnnouncement")) {
+            settings.addProperty("hideInitialSetupAnnouncement", false)
+        }
+        if (!settings.has("templateManagementVisited")) {
+            settings.addProperty("templateManagementVisited", false)
+        }
+
+        root.addProperty("backupSchemaVersion", 3)
+        root.toString()
+    }
+
     private fun defaultPolicyJson() =
         JsonParser.parseString(
             """

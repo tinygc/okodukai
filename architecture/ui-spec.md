@@ -14,6 +14,7 @@
 ### 表示条件
 - `hasBudget = false` または `hasVisitedTemplateManagement = false` の場合に表示
 - 条件を満たす間は、`MainScreen` 表示時に再表示
+- ただし `hideInitialSetupAnnouncement = true` の場合は表示しない
 
 ### 画面構成
 - タイトル: 「セットアップ」
@@ -21,12 +22,15 @@
 - アクション1: 「予算設定へ」
 - アクション2: 「テンプレ管理へ」
 - 閉じる操作: 「あとで」
+- 補助操作: 「今後表示しない」
 
 ### 挙動
 - 「予算設定へ」で予算設定画面に遷移する
 - 「テンプレ管理へ」でテンプレ管理画面に遷移する
 - 「あとで」でダイアログを閉じる（条件未達の場合、次回 `MainScreen` 表示時に再表示）
+- 「今後表示しない」で `hideInitialSetupAnnouncement = true` を保存し、次回以降は表示しない
 - 予算設定済み かつ テンプレ管理訪問済みになったら表示しない
+- 設定画面の「初期設定ガイドを再表示」で `hideInitialSetupAnnouncement = false` に戻せる
 
 ### メッセージ
 - 画面内文言はシンプルな短文を使用する

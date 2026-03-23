@@ -202,3 +202,4 @@
 - `goal_achievement_mode`: String（目標達成モード）
 - `quick_input_amounts`: String（クイック入力8件のシリアライズ値）
 - `has_visited_template_management`: Boolean（テンプレ管理画面を表示済みか）
+- `hide_initial_setup_announcement`: Boolean（初期設定ガイドを非表示にするフラグ）

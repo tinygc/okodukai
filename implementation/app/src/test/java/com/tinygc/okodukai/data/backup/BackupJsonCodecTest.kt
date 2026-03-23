@@ -102,11 +102,18 @@ class BackupJsonCodecTest {
     @Test
     fun `encodeしてdecodeすると同一データが復元できる`() {
         val original = BackupDocument(
-            backupSchemaVersion = 2,
+            backupSchemaVersion = 3,
             appDataVersion = "4",
             exportedAt = "2026-03-17T00:00:00",
             backupPolicy = mapOf("budgets" to "INCLUDED"),
-            payload = BackupPayload()
+            payload = BackupPayload(
+                settings = BackupSettings(
+                    defaultCategoryId = "c1",
+                    goalAchievementMode = "INDIVIDUAL",
+                    hideInitialSetupAnnouncement = true,
+                    templateManagementVisited = true
+                )
+            )
         )
 
         val decoded = codec.decode(codec.encode(original))
@@ -115,6 +122,7 @@ class BackupJsonCodecTest {
         assertEquals(original.appDataVersion, decoded.appDataVersion)
         assertEquals(original.exportedAt, decoded.exportedAt)
         assertEquals(original.backupPolicy, decoded.backupPolicy)
+        assertEquals(original.payload.settings, decoded.payload.settings)
     }
 
     @Test
