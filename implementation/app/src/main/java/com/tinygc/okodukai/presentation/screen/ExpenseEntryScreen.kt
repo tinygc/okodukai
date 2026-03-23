@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -44,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -52,6 +54,10 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.collectAsState
 import com.tinygc.okodukai.presentation.component.DatePickerField
+
+private inline fun LazyListScope.itemContent(crossinline content: @Composable () -> Unit) {
+    item { content() }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,6 +78,37 @@ fun ExpenseEntryScreen(
             }
         }
     }
+
+    ExpenseEntryContent(
+        paddingValues = paddingValues,
+        uiState = uiState,
+        onTabSelected = viewModel::onTabSelected,
+        onDateChange = viewModel::onDateChange,
+        onQuickAmountAdd = viewModel::onQuickAmountAdd,
+        onResetAmount = viewModel::onResetAmount,
+        onAmountChange = viewModel::onAmountChange,
+        onCategorySelected = viewModel::onCategorySelected,
+        onSubCategorySelected = viewModel::onSubCategorySelected,
+        onSaveExpense = viewModel::onSaveExpense,
+        onTemplateSelected = viewModel::onTemplateSelected
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun ExpenseEntryContent(
+    paddingValues: PaddingValues,
+    uiState: ExpenseEntryUiState,
+    onTabSelected: (ExpenseEntryTab) -> Unit,
+    onDateChange: (String) -> Unit,
+    onQuickAmountAdd: (Int) -> Unit,
+    onResetAmount: () -> Unit,
+    onAmountChange: (String) -> Unit,
+    onCategorySelected: (String) -> Unit,
+    onSubCategorySelected: (String) -> Unit,
+    onSaveExpense: () -> Unit,
+    onTemplateSelected: (String, String?, Int) -> Unit
+) {
 
     Column(
         modifier = Modifier
@@ -95,7 +132,7 @@ fun ExpenseEntryScreen(
             val normalSelected = uiState.currentTab == ExpenseEntryTab.Normal
             Tab(
                 selected = normalSelected,
-                onClick = { viewModel.onTabSelected(ExpenseEntryTab.Normal) },
+                onClick = { onTabSelected(ExpenseEntryTab.Normal) },
                 modifier = Modifier.height(44.dp),
                 text = {
                     Text(
@@ -108,7 +145,7 @@ fun ExpenseEntryScreen(
             val templateSelected = uiState.currentTab == ExpenseEntryTab.Template
             Tab(
                 selected = templateSelected,
-                onClick = { viewModel.onTabSelected(ExpenseEntryTab.Template) },
+                onClick = { onTabSelected(ExpenseEntryTab.Template) },
                 modifier = Modifier.height(44.dp),
                 text = {
                     Text(
@@ -124,10 +161,25 @@ fun ExpenseEntryScreen(
 
         when (uiState.currentTab) {
             ExpenseEntryTab.Normal -> {
-                NormalEntryContent(uiState = uiState, viewModel = viewModel)
+                NormalEntryContent(
+                    uiState = uiState,
+                    onDateChange = onDateChange,
+                    onQuickAmountAdd = onQuickAmountAdd,
+                    onResetAmount = onResetAmount,
+                    onAmountChange = onAmountChange,
+                    onCategorySelected = onCategorySelected,
+                    onSubCategorySelected = onSubCategorySelected,
+                    onSaveExpense = onSaveExpense,
+                    modifier = Modifier.weight(1f)
+                )
             }
             ExpenseEntryTab.Template -> {
-                TemplateEntryContent(uiState = uiState, viewModel = viewModel)
+                TemplateEntryContent(
+                    uiState = uiState,
+                    onDateChange = onDateChange,
+                    onTemplateSelected = onTemplateSelected,
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }
@@ -137,227 +189,243 @@ fun ExpenseEntryScreen(
 @Composable
 private fun NormalEntryContent(
     uiState: ExpenseEntryUiState,
-    viewModel: ExpenseEntryViewModel
+    onDateChange: (String) -> Unit,
+    onQuickAmountAdd: (Int) -> Unit,
+    onResetAmount: () -> Unit,
+    onAmountChange: (String) -> Unit,
+    onCategorySelected: (String) -> Unit,
+    onSubCategorySelected: (String) -> Unit,
+    onSaveExpense: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var categoryExpanded by remember { mutableStateOf(false) }
     var subCategoryExpanded by remember { mutableStateOf(false) }
-
-    // 日付フィールド (タップでDatePickerを開く) - 一番上に配置
-    DatePickerField(
-        dateValue = uiState.dateInput,
-        onDateSelected = viewModel::onDateChange,
-        modifier = Modifier
+    LazyColumn(
+        modifier = modifier
             .fillMaxWidth()
-            .padding(bottom = 16.dp)
-    )
-
-    // クイック金額入力ボタン
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp)),
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        tonalElevation = 2.dp
+            .testTag("expenseEntryNormalList"),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                text = "クイック入力",
-                style = MaterialTheme.typography.titleSmall.copy(fontSize = 16.sp),
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+        itemContent {
+            DatePickerField(
+                dateValue = uiState.dateInput,
+                onDateSelected = onDateChange,
+                modifier = Modifier.fillMaxWidth()
             )
-
-            uiState.quickInputAmounts.take(6).chunked(3).forEach { rowAmounts ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+        }
+        itemContent {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp)),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                tonalElevation = 2.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    rowAmounts.forEach { amount ->
-                        QuickAmountButton(
-                            amount = amount,
-                            onClick = { viewModel.onQuickAmountAdd(amount) },
-                            modifier = Modifier.weight(1f)
+                    Text(
+                        text = "クイック入力",
+                        style = MaterialTheme.typography.titleSmall.copy(fontSize = 16.sp),
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    uiState.quickInputAmounts.take(6).chunked(3).forEach { rowAmounts ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            rowAmounts.forEach { amount ->
+                                QuickAmountButton(
+                                    amount = amount,
+                                    onClick = { onQuickAmountAdd(amount) },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+
+                            repeat(3 - rowAmounts.size) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val lastRowAmounts = uiState.quickInputAmounts.drop(6).take(2)
+                        lastRowAmounts.forEach { amount ->
+                            QuickAmountButton(
+                                amount = amount,
+                                onClick = { onQuickAmountAdd(amount) },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+
+                        repeat((2 - lastRowAmounts.size).coerceAtLeast(0)) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+
+                        OutlinedButton(
+                            onClick = onResetAmount,
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.onSurface
+                            )
+                        ) {
+                            Text("リセット", style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp))
+                        }
+                    }
+                }
+            }
+        }
+        itemContent {
+            OutlinedTextField(
+                value = uiState.amountInput,
+                onValueChange = onAmountChange,
+                label = { Text("金額", style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp)) },
+                placeholder = { Text("例: 1200", style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                textStyle = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 28.sp
+                ),
+                suffix = { Text("円", style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp)) }
+            )
+        }
+        itemContent {
+            ExposedDropdownMenuBox(
+                expanded = categoryExpanded,
+                onExpandedChange = { categoryExpanded = !categoryExpanded }
+            ) {
+                val selectedCategory = uiState.categories.find { it.id == uiState.selectedCategoryId }
+                TextField(
+                    value = selectedCategory?.name ?: "",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("カテゴリ", style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp)) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) },
+                    modifier = Modifier
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
+                        .fillMaxWidth()
+                )
+                ExposedDropdownMenu(
+                    expanded = categoryExpanded,
+                    onDismissRequest = { categoryExpanded = false }
+                ) {
+                    uiState.categories.forEach { category ->
+                        DropdownMenuItem(
+                            text = { Text(category.name) },
+                            onClick = {
+                                onCategorySelected(category.id)
+                                categoryExpanded = false
+                            }
                         )
                     }
-
-                    repeat(3 - rowAmounts.size) {
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
                 }
             }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                val lastRowAmounts = uiState.quickInputAmounts.drop(6).take(2)
-                lastRowAmounts.forEach { amount ->
-                    QuickAmountButton(
-                        amount = amount,
-                        onClick = { viewModel.onQuickAmountAdd(amount) },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
-                repeat((2 - lastRowAmounts.size).coerceAtLeast(0)) {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-
-                OutlinedButton(
-                    onClick = { viewModel.onResetAmount() },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.onSurface
-                    )
+        }
+        if (uiState.subCategories.isNotEmpty()) {
+            itemContent {
+                ExposedDropdownMenuBox(
+                    expanded = subCategoryExpanded,
+                    onExpandedChange = { subCategoryExpanded = !subCategoryExpanded }
                 ) {
-                    Text("リセット", style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp))
-                }
-            }
-        }
-    }
-
-    Spacer(modifier = Modifier.height(16.dp))
-
-    // 金額表示・手入力フィールド
-    OutlinedTextField(
-        value = uiState.amountInput,
-        onValueChange = viewModel::onAmountChange,
-        label = { Text("金額", style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp)) },
-        placeholder = { Text("例: 1200", style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp)) },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        singleLine = true,
-        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-        textStyle = MaterialTheme.typography.titleLarge.copy(
-            fontWeight = FontWeight.Bold,
-            fontSize = 28.sp
-        ),
-        suffix = { Text("円", style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp)) }
-    )
-
-    ExposedDropdownMenuBox(
-        expanded = categoryExpanded,
-        onExpandedChange = { categoryExpanded = !categoryExpanded }
-    ) {
-        val selectedCategory = uiState.categories.find { it.id == uiState.selectedCategoryId }
-        TextField(
-            value = selectedCategory?.name ?: "",
-            onValueChange = {},
-            readOnly = true,
-            label = { Text("カテゴリ", style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp)) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) },
-            modifier = Modifier
-                .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
-                .fillMaxWidth()
-                .padding(bottom = 12.dp)
-        )
-        ExposedDropdownMenu(
-            expanded = categoryExpanded,
-            onDismissRequest = { categoryExpanded = false }
-        ) {
-            uiState.categories.forEach { category ->
-                DropdownMenuItem(
-                    text = { Text(category.name) },
-                    onClick = {
-                        viewModel.onCategorySelected(category.id)
-                        categoryExpanded = false
-                    }
-                )
-            }
-        }
-    }
-
-    if (uiState.subCategories.isNotEmpty()) {
-        ExposedDropdownMenuBox(
-            expanded = subCategoryExpanded,
-            onExpandedChange = { subCategoryExpanded = !subCategoryExpanded }
-        ) {
-            val selectedSubCategory = uiState.subCategories.find { it.id == uiState.selectedSubCategoryId }
-            TextField(
-                value = selectedSubCategory?.name ?: "",
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("サブカテゴリ", style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp)) },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = subCategoryExpanded) },
-                modifier = Modifier
-                    .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-            )
-            ExposedDropdownMenu(
-                expanded = subCategoryExpanded,
-                onDismissRequest = { subCategoryExpanded = false }
-            ) {
-                uiState.subCategories.forEach { subCategory ->
-                    DropdownMenuItem(
-                        text = { Text(subCategory.name) },
-                        onClick = {
-                            viewModel.onSubCategorySelected(subCategory.id)
-                            subCategoryExpanded = false
-                        }
+                    val selectedSubCategory = uiState.subCategories.find { it.id == uiState.selectedSubCategoryId }
+                    TextField(
+                        value = selectedSubCategory?.name ?: "",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("サブカテゴリ", style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp)) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = subCategoryExpanded) },
+                        modifier = Modifier
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
+                            .fillMaxWidth()
                     )
+                    ExposedDropdownMenu(
+                        expanded = subCategoryExpanded,
+                        onDismissRequest = { subCategoryExpanded = false }
+                    ) {
+                        uiState.subCategories.forEach { subCategory ->
+                            DropdownMenuItem(
+                                text = { Text(subCategory.name) },
+                                onClick = {
+                                    onSubCategorySelected(subCategory.id)
+                                    subCategoryExpanded = false
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }
-    }
-
-    Button(
-        onClick = { viewModel.onSaveExpense() },
-        enabled = !uiState.isSaving
-    ) {
-        Text("保存", style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp))
+        itemContent {
+            Button(
+                onClick = onSaveExpense,
+                enabled = !uiState.isSaving
+            ) {
+                Text("保存", style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp))
+            }
+        }
     }
 }
 
 @Composable
 private fun TemplateEntryContent(
     uiState: ExpenseEntryUiState,
-    viewModel: ExpenseEntryViewModel
+    onDateChange: (String) -> Unit,
+    onTemplateSelected: (String, String?, Int) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        // 日付フィールド (タップでDatePickerを開く) - テンプレタブにも表示
-        DatePickerField(
-            dateValue = uiState.dateInput,
-            onDateSelected = viewModel::onDateChange,
-            modifier = Modifier.fillMaxWidth()
-        )
+    LazyColumn(
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("expenseEntryTemplateList"),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        itemContent {
+            DatePickerField(
+                dateValue = uiState.dateInput,
+                onDateSelected = onDateChange,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
 
         if (uiState.templates.isEmpty()) {
-            Text(
-                text = "テンプレがありません",
-                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier.weight(1f, fill = false),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(uiState.templates) { template ->
-            FilledTonalButton(
-                onClick = {
-                    viewModel.onTemplateSelected(
-                        templateCategoryId = template.categoryId,
-                        templateSubCategoryId = template.subCategoryId,
-                        templateAmount = template.amount
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            ) {
+            itemContent {
                 Text(
-                    text = "${template.name} ${template.amount}円",
-                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp)
+                    text = "テンプレがありません",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-        }
+        } else {
+            items(uiState.templates) { template ->
+                FilledTonalButton(
+                    onClick = {
+                        onTemplateSelected(
+                            template.categoryId,
+                            template.subCategoryId,
+                            template.amount
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                ) {
+                    Text(
+                        text = "${template.name} ${template.amount}円",
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp)
+                    )
+                }
             }
         }
     }

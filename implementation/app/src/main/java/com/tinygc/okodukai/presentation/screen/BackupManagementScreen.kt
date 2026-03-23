@@ -6,11 +6,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -25,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,6 +40,10 @@ import com.google.android.gms.common.api.CommonStatusCodes
 import com.google.android.gms.common.api.Scope
 import com.google.api.services.drive.DriveScopes
 import com.tinygc.okodukai.presentation.viewmodel.BackupManagementViewModel
+
+private inline fun LazyListScope.itemContent(crossinline content: @Composable () -> Unit) {
+    item { content() }
+}
 
 @Composable
 fun BackupManagementScreen(
@@ -89,112 +95,154 @@ fun BackupManagementScreen(
         }
     }
 
-    Column(
+    BackupManagementContent(
+        paddingValues = paddingValues,
+        uiState = uiState,
+        onSignIn = { signInLauncher.launch(signInClient.signInIntent) },
+        onSignOut = {
+            signInClient.signOut().addOnCompleteListener {
+                viewModel.onAccountCleared()
+            }
+        },
+        onExport = viewModel::exportBackup,
+        onImport = viewModel::importBackup,
+        onBack = onBack
+    )
+}
+
+@Composable
+internal fun BackupManagementContent(
+    paddingValues: PaddingValues,
+    uiState: com.tinygc.okodukai.presentation.viewmodel.BackupManagementUiState,
+    onSignIn: () -> Unit,
+    onSignOut: () -> Unit,
+    onExport: () -> Unit,
+    onImport: () -> Unit,
+    onBack: () -> Unit
+) {
+
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .padding(paddingValues)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .testTag("backupManagementList"),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(
-            text = "バックアップ",
-            style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
-            fontWeight = FontWeight.SemiBold
-        )
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        itemContent {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
                 Text(
-                    text = uiState.accountName?.let { "接続中: $it" } ?: "Googleアカウント未接続",
-                    style = MaterialTheme.typography.bodyMedium
+                    text = "バックアップ",
+                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
+                    fontWeight = FontWeight.SemiBold
                 )
-                Button(
-                    onClick = { signInLauncher.launch(signInClient.signInIntent) },
-                    enabled = !uiState.isWorking,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Googleでサインイン")
-                }
-                OutlinedButton(
-                    onClick = {
-                        signInClient.signOut().addOnCompleteListener {
-                            viewModel.onAccountCleared()
-                        }
-                    },
-                    enabled = !uiState.isWorking && uiState.accountName != null,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("サインアウト")
+                TextButton(onClick = onBack) {
+                    Text("戻る", style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp))
                 }
             }
         }
 
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(
-                    text = "Google Drive (AppData) にバックアップ",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Button(
-                    onClick = viewModel::exportBackup,
-                    enabled = !uiState.isWorking && uiState.accountName != null,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Export")
+        itemContent {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = uiState.accountName?.let { "接続中: $it" } ?: "Googleアカウント未接続",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Button(
+                        onClick = onSignIn,
+                        enabled = !uiState.isWorking,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Googleでサインイン")
+                    }
+                    OutlinedButton(
+                        onClick = onSignOut,
+                        enabled = !uiState.isWorking && uiState.accountName != null,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("サインアウト")
+                    }
                 }
-                OutlinedButton(
-                    onClick = viewModel::importBackup,
-                    enabled = !uiState.isWorking && uiState.accountName != null,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Import（全置換）")
+            }
+        }
+
+        itemContent {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        text = "Google Drive (AppData) にバックアップ",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Button(
+                        onClick = onExport,
+                        enabled = !uiState.isWorking && uiState.accountName != null,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Export")
+                    }
+                    OutlinedButton(
+                        onClick = onImport,
+                        enabled = !uiState.isWorking && uiState.accountName != null,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Import（全置換）")
+                    }
                 }
             }
         }
 
         if (uiState.isWorking) {
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    CircularProgressIndicator()
-                    Text("処理中です...")
+            itemContent {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        CircularProgressIndicator()
+                        Text("処理中です...")
+                    }
                 }
             }
         }
 
         uiState.errorMessage?.let {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                Text(
-                    text = it,
-                    modifier = Modifier.padding(12.dp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            itemContent {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    Text(
+                        text = it,
+                        modifier = Modifier.padding(12.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
 
         uiState.successMessage?.let {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                Text(
-                    text = it,
-                    modifier = Modifier.padding(12.dp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            itemContent {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    Text(
+                        text = it,
+                        modifier = Modifier.padding(12.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
 
-        Spacer(modifier = Modifier.height(4.dp))
-        TextButton(onClick = onBack) {
-            Text("戻る")
-        }
     }
 }
 
