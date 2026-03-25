@@ -2,6 +2,8 @@ package com.tinygc.okodukai.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tinygc.okodukai.data.local.preference.DefaultMonthStartDayStore
+import com.tinygc.okodukai.data.local.preference.MonthStartDayStore
 import com.tinygc.okodukai.domain.model.GoalAchievementMode
 import com.tinygc.okodukai.domain.util.DateTimeUtil
 import com.tinygc.okodukai.domain.usecase.expense.DeleteExpenseUseCase
@@ -27,15 +29,27 @@ class MonthlySummaryViewModel @Inject constructor(
     private val getCategoryByIdUseCase: GetCategoryByIdUseCase,
     private val getSavingsProgressUseCase: GetSavingsProgressUseCase,
     private val getTotalIncomeByMonthUseCase: GetTotalIncomeByMonthUseCase,
+    private val monthStartDayStore: MonthStartDayStore = DefaultMonthStartDayStore,
     private val getGoalAchievementModeUseCase: GetGoalAchievementModeUseCase? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MonthlySummaryUiState())
     val uiState: StateFlow<MonthlySummaryUiState> = _uiState.asStateFlow()
 
+    private val _currentMonth = MutableStateFlow("")
+    val currentMonth: StateFlow<String> = _currentMonth.asStateFlow()
+
+    private val _monthStartDay = MutableStateFlow(1)
+    val monthStartDay: StateFlow<Int> = _monthStartDay.asStateFlow()
+
     init {
-        val currentMonth = DateTimeUtil.getCurrentMonth()
-        loadSummary(currentMonth)
+        viewModelScope.launch {
+            val monthStartDay = monthStartDayStore.monthStartDay.first()
+            _monthStartDay.value = monthStartDay
+            val month = DateTimeUtil.getCurrentMonth(monthStartDay)
+            _currentMonth.value = month
+            loadSummary(month)
+        }
     }
 
     private fun loadSummary(month: String) {

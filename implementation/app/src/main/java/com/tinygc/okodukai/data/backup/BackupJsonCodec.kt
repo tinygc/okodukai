@@ -110,6 +110,9 @@ class BackupJsonCodec(
         if (!settings.has("goalAchievementMode") || settings.get("goalAchievementMode").isJsonNull) {
             settings.addProperty("goalAchievementMode", BackupSchemas.DEFAULT_GOAL_ACHIEVEMENT_MODE)
         }
+        if (!settings.has("monthStartDay") || settings.get("monthStartDay").isJsonNull) {
+            settings.addProperty("monthStartDay", 1)
+        }
     }
 
     private fun ensureObject(parent: JsonObject, key: String): JsonObject {

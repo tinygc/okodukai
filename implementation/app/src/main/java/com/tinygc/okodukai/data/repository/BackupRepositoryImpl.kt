@@ -61,7 +61,8 @@ class BackupRepositoryImpl @Inject constructor(
     private val migrationManager = BackupMigrationManager(
         migrationSteps = mapOf(
             1 to BackupMigrationDefinitions.V1_TO_V2,
-            2 to BackupMigrationDefinitions.V2_TO_V3
+            2 to BackupMigrationDefinitions.V2_TO_V3,
+            3 to BackupMigrationDefinitions.V3_TO_V4
         )
     )
 
@@ -99,7 +100,8 @@ class BackupRepositoryImpl @Inject constructor(
                             defaultCategoryId = settings.defaultCategoryId,
                             goalAchievementMode = settings.goalAchievementMode,
                             hideInitialSetupAnnouncement = settings.hideInitialSetupAnnouncement,
-                            templateManagementVisited = settings.templateManagementVisited
+                            templateManagementVisited = settings.templateManagementVisited,
+                            monthStartDay = settings.monthStartDay
                         )
                     )
                 )
@@ -329,7 +331,8 @@ class BackupRepositoryImpl @Inject constructor(
                 goalAchievementMode = document.payload.settings.goalAchievementMode,
                 quickInputAmounts = currentSnapshot.quickInputAmounts,
                 hideInitialSetupAnnouncement = document.payload.settings.hideInitialSetupAnnouncement,
-                templateManagementVisited = document.payload.settings.templateManagementVisited
+                templateManagementVisited = document.payload.settings.templateManagementVisited,
+                monthStartDay = document.payload.settings.monthStartDay.coerceIn(1, 31)
             )
         } else {
             UserPreferencesDataStore.SettingsSnapshot(
@@ -337,7 +340,8 @@ class BackupRepositoryImpl @Inject constructor(
                 goalAchievementMode = BackupSchemas.DEFAULT_GOAL_ACHIEVEMENT_MODE,
                 quickInputAmounts = currentSnapshot.quickInputAmounts,
                 hideInitialSetupAnnouncement = false,
-                templateManagementVisited = false
+                templateManagementVisited = false,
+                monthStartDay = 1
             )
         }
 

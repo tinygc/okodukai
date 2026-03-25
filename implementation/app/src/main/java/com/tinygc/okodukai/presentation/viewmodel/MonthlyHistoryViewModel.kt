@@ -2,6 +2,9 @@ package com.tinygc.okodukai.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tinygc.okodukai.data.local.preference.DefaultMonthStartDayStore
+import com.tinygc.okodukai.data.local.preference.MonthStartDayStore
+import com.tinygc.okodukai.domain.util.DateTimeUtil
 import com.tinygc.okodukai.domain.usecase.budget.GetBudgetByMonthUseCase
 import com.tinygc.okodukai.domain.usecase.expense.GetExpensesByMonthUseCase
 import com.tinygc.okodukai.domain.usecase.income.GetTotalIncomeByMonthUseCase
@@ -9,8 +12,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -19,7 +22,8 @@ import javax.inject.Inject
 class MonthlyHistoryViewModel @Inject constructor(
     private val getBudgetByMonthUseCase: GetBudgetByMonthUseCase,
     private val getExpensesByMonthUseCase: GetExpensesByMonthUseCase,
-    private val getTotalIncomeByMonthUseCase: GetTotalIncomeByMonthUseCase
+    private val getTotalIncomeByMonthUseCase: GetTotalIncomeByMonthUseCase,
+    private val monthStartDayStore: MonthStartDayStore = DefaultMonthStartDayStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MonthlyHistoryUiState())
@@ -35,7 +39,8 @@ class MonthlyHistoryViewModel @Inject constructor(
 
             try {
                 // 過去12ヶ月+今月のデータを取得
-                val currentYearMonth = YearMonth.now()
+                val currentMonth = DateTimeUtil.getCurrentMonth(monthStartDayStore.monthStartDay.first())
+                val currentYearMonth = YearMonth.parse(currentMonth)
                 val histories = mutableListOf<MonthlyHistoryItem>()
                 val recurringBudget = getBudgetByMonthUseCase(
                     currentYearMonth.format(DateTimeFormatter.ofPattern("yyyy-MM"))

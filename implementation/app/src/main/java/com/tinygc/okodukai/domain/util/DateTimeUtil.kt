@@ -3,6 +3,7 @@ package com.tinygc.okodukai.domain.util
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.YearMonth
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -56,8 +57,44 @@ object DateTimeUtil {
     /**
      * 現在月を取得（YYYY-MM）
      */
-    fun getCurrentMonth(): String {
-        return LocalDate.now(APP_TIMEZONE).format(monthFormatter)
+    fun getCurrentMonth(monthStartDay: Int = 1): String {
+        val today = LocalDate.now(APP_TIMEZONE)
+        return resolveMonthLabel(today, monthStartDay)
+    }
+
+    /**
+     * 月開始日を正規化する。
+     *
+     * 入力は1〜31を許可し、集計境界は常に1〜28に収める。
+     */
+    fun normalizeMonthStartDay(monthStartDay: Int): Int {
+        return monthStartDay.coerceIn(1, 28)
+    }
+
+    /**
+     * 日付が属する論理月（YYYY-MM）を返す。
+     */
+    fun resolveMonthLabel(date: LocalDate, monthStartDay: Int): String {
+        val boundaryDay = normalizeMonthStartDay(monthStartDay)
+        val yearMonth = if (date.dayOfMonth < boundaryDay) {
+            YearMonth.from(date).minusMonths(1)
+        } else {
+            YearMonth.from(date)
+        }
+        return yearMonth.format(monthFormatter)
+    }
+
+    /**
+     * 論理月に対応する集計期間を返す。
+     *
+     * 戻り値は [開始日, 終了日(排他的)] の半開区間。
+     */
+    fun getMonthDateRange(month: String, monthStartDay: Int): Pair<String, String> {
+        val boundaryDay = normalizeMonthStartDay(monthStartDay)
+        val startYearMonth = YearMonth.parse(month)
+        val startDate = startYearMonth.atDay(boundaryDay)
+        val endDateExclusive = startDate.plusMonths(1)
+        return startDate.format(dateFormatter) to endDateExclusive.format(dateFormatter)
     }
     
     /**

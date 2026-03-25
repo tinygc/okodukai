@@ -1,5 +1,7 @@
 package com.tinygc.okodukai.domain.usecase.saving
 
+import com.tinygc.okodukai.data.local.preference.DefaultMonthStartDayStore
+import com.tinygc.okodukai.data.local.preference.MonthStartDayStore
 import com.tinygc.okodukai.domain.model.GoalAchievementMode
 import com.tinygc.okodukai.domain.model.SavingGoalProgress
 import com.tinygc.okodukai.domain.model.SavingsProgress
@@ -7,18 +9,23 @@ import com.tinygc.okodukai.domain.repository.BudgetRepository
 import com.tinygc.okodukai.domain.repository.ExpenseRepository
 import com.tinygc.okodukai.domain.repository.IncomeRepository
 import com.tinygc.okodukai.domain.repository.SavingGoalRepository
+import com.tinygc.okodukai.domain.util.DateTimeUtil
+import kotlinx.coroutines.flow.first
+import java.time.LocalDate
 import javax.inject.Inject
 
 class GetSavingsProgressUseCase @Inject constructor(
     private val budgetRepository: BudgetRepository,
     private val expenseRepository: ExpenseRepository,
     private val incomeRepository: IncomeRepository,
-    private val savingGoalRepository: SavingGoalRepository
+    private val savingGoalRepository: SavingGoalRepository,
+    private val monthStartDayStore: MonthStartDayStore = DefaultMonthStartDayStore
 ) {
     suspend operator fun invoke(
         month: String,
         mode: GoalAchievementMode
     ): Result<SavingsProgress> = runCatching {
+        val monthStartDay = monthStartDayStore.monthStartDay.first()
         val budgets = budgetRepository.getAllBudgets().getOrThrow()
         val expenses = expenseRepository.getAllExpenses().getOrThrow()
         val incomes = incomeRepository.getAllIncomes().getOrThrow()
@@ -28,11 +35,15 @@ class GetSavingsProgressUseCase @Inject constructor(
         val recurringBudget = budgets.maxByOrNull { it.updatedAt }?.amount ?: 0
         val expenseByMonth = expenses
             .filter { !it.isUncategorized }
-            .groupBy { it.date.substring(0, 7) }
-            .mapValues { (_, v) -> v.sumOf { it.amount } }
+            .groupBy { expense ->
+                DateTimeUtil.resolveMonthLabel(LocalDate.parse(expense.date), monthStartDay)
+            }
+            .mapValues { (_, values) -> values.sumOf { it.amount } }
         val incomeByMonth = incomes
-            .groupBy { it.date.substring(0, 7) }
-            .mapValues { (_, v) -> v.sumOf { it.amount } }
+            .groupBy { income ->
+                DateTimeUtil.resolveMonthLabel(LocalDate.parse(income.date), monthStartDay)
+            }
+            .mapValues { (_, values) -> values.sumOf { it.amount } }
 
         val months = (expenseByMonth.keys + incomeByMonth.keys + setOf(month))
             .filter { it <= month }

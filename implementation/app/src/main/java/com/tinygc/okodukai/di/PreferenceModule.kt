@@ -1,6 +1,7 @@
 package com.tinygc.okodukai.di
 
 import android.content.Context
+import com.tinygc.okodukai.data.local.preference.MonthStartDayStore
 import com.tinygc.okodukai.data.local.preference.UserPreferencesDataStore
 import dagger.Module
 import dagger.Provides
@@ -19,5 +20,13 @@ object PreferenceModule {
         @ApplicationContext context: Context
     ): UserPreferencesDataStore {
         return UserPreferencesDataStore(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideMonthStartDayStore(
+        userPreferencesDataStore: UserPreferencesDataStore
+    ): MonthStartDayStore {
+        return userPreferencesDataStore
     }
 }

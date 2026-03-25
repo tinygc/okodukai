@@ -79,6 +79,34 @@ interface IncomeDao {
     """)
     fun getTotalByMonthFlow(month: String): Flow<Int>
 
+    @Query("""
+        SELECT * FROM incomes
+        WHERE date >= :startDate AND date < :endDateExclusive
+        ORDER BY date DESC, created_at DESC
+    """)
+    suspend fun getByDateRange(startDate: String, endDateExclusive: String): List<IncomeEntity>
+
+    @Query("""
+        SELECT * FROM incomes
+        WHERE date >= :startDate AND date < :endDateExclusive
+        ORDER BY date DESC, created_at DESC
+    """)
+    fun getByDateRangeFlow(startDate: String, endDateExclusive: String): Flow<List<IncomeEntity>>
+
+    @Query("""
+        SELECT COALESCE(SUM(amount), 0)
+        FROM incomes
+        WHERE date >= :startDate AND date < :endDateExclusive
+    """)
+    suspend fun getTotalByDateRange(startDate: String, endDateExclusive: String): Int
+
+    @Query("""
+        SELECT COALESCE(SUM(amount), 0)
+        FROM incomes
+        WHERE date >= :startDate AND date < :endDateExclusive
+    """)
+    fun getTotalByDateRangeFlow(startDate: String, endDateExclusive: String): Flow<Int>
+
     /**
      * 全臨時収入を取得
      */

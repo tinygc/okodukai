@@ -142,6 +142,60 @@ fun BudgetSettingScreen(
             }
         }
 
+        // Month start day section
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "月の開始日を設定",
+                        style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
+                        fontWeight = FontWeight.SemiBold
+                    )
+
+                    OutlinedTextField(
+                        value = uiState.monthStartDayInput,
+                        onValueChange = viewModel::onMonthStartDayChange,
+                        label = { Text("開始日（1〜31）") },
+                        placeholder = { Text("例: 25") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        enabled = !uiState.isSavingMonthStartDay && !uiState.isLoading,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Text(
+                        text = "29〜31を設定した場合も、集計判定は28日境界で行います",
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Button(
+                        onClick = viewModel::saveMonthStartDay,
+                        enabled = uiState.monthStartDayInput.isNotEmpty() && !uiState.isSavingMonthStartDay && !uiState.isLoading,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        if (uiState.isSavingMonthStartDay) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+                        Text(
+                            text = if (uiState.isSavingMonthStartDay) "保存中..." else "月の開始日を保存",
+                            style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp)
+                        )
+                    }
+                }
+            }
+        }
+
         // Error message
         uiState.errorMessage?.let { error ->
             item {

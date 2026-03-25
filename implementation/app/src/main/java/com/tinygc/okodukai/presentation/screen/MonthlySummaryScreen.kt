@@ -58,6 +58,8 @@ import com.tinygc.okodukai.presentation.viewmodel.MonthlySummaryUiState
 import com.tinygc.okodukai.presentation.viewmodel.MonthlySummaryViewModel
 import com.tinygc.okodukai.presentation.viewmodel.SavingGoalProgressUiModel
 import java.text.NumberFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Composable
@@ -68,15 +70,18 @@ fun MonthlySummaryScreen(
     viewModel: MonthlySummaryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val currentMonth = DateTimeUtil.getCurrentMonth()
+    val currentMonth by viewModel.currentMonth.collectAsState()
+    val monthStartDay by viewModel.monthStartDay.collectAsState()
+    val resolvedCurrentMonth = if (currentMonth.isBlank()) uiState.month else currentMonth
 
     MonthlySummaryContent(
         paddingValues = paddingValues,
         uiState = uiState,
+        monthStartDay = monthStartDay,
         onPreviousMonth = { viewModel.onMonthChange(getPreviousMonth(uiState.month)) },
         onNextMonth = { viewModel.onMonthChange(getNextMonth(uiState.month)) },
-        onBackToCurrentMonth = { viewModel.onMonthChange(currentMonth) },
-        showBackToCurrentMonth = uiState.month != currentMonth,
+        onBackToCurrentMonth = { viewModel.onMonthChange(resolvedCurrentMonth) },
+        showBackToCurrentMonth = uiState.month != resolvedCurrentMonth,
         onUpdateExpense = { expenseItem, date, amount, memo ->
             viewModel.onUpdateExpense(expenseItem, date, amount, memo)
         },
@@ -90,6 +95,7 @@ fun MonthlySummaryScreen(
 internal fun MonthlySummaryContent(
     paddingValues: PaddingValues,
     uiState: MonthlySummaryUiState,
+    monthStartDay: Int,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
     onBackToCurrentMonth: () -> Unit,
@@ -121,6 +127,7 @@ internal fun MonthlySummaryContent(
         item {
             MonthSelector(
                 currentMonth = uiState.month,
+                monthStartDay = monthStartDay,
                 onPreviousMonth = onPreviousMonth,
                 onNextMonth = onNextMonth,
                 onBackToCurrentMonth = onBackToCurrentMonth,
@@ -361,6 +368,7 @@ internal fun MonthlySummaryContent(
 @Composable
 private fun MonthSelector(
     currentMonth: String,
+    monthStartDay: Int,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
     onBackToCurrentMonth: () -> Unit,
@@ -416,6 +424,15 @@ private fun MonthSelector(
                 }
             }
 
+            if (currentMonth.isNotBlank()) {
+                Text(
+                    text = formatMonthRangeDisplay(currentMonth, monthStartDay),
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            }
+
             if (showBackToCurrentMonth) {
                 Text(
                     text = "今月に戻る",
@@ -435,6 +452,14 @@ private fun MonthSelector(
             }
         }
     }
+}
+
+private fun formatMonthRangeDisplay(month: String, monthStartDay: Int): String {
+    val (startDate, endDateExclusive) = DateTimeUtil.getMonthDateRange(month, monthStartDay)
+    val formatter = DateTimeFormatter.ofPattern("M月d日")
+    val start = LocalDate.parse(startDate).format(formatter)
+    val end = LocalDate.parse(endDateExclusive).minusDays(1).format(formatter)
+    return "$start～$end"
 }
 
 @Composable

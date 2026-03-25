@@ -2,6 +2,8 @@ package com.tinygc.okodukai.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tinygc.okodukai.data.local.preference.DefaultMonthStartDayStore
+import com.tinygc.okodukai.data.local.preference.MonthStartDayStore
 import com.tinygc.okodukai.domain.model.Income
 import com.tinygc.okodukai.domain.util.DateTimeUtil
 import com.tinygc.okodukai.domain.usecase.income.AddIncomeUseCase
@@ -12,6 +14,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -20,15 +23,18 @@ class IncomeManagementViewModel @Inject constructor(
     private val getIncomesByMonthUseCase: GetIncomesByMonthUseCase,
     private val getTotalIncomeByMonthUseCase: GetTotalIncomeByMonthUseCase,
     private val addIncomeUseCase: AddIncomeUseCase,
-    private val deleteIncomeUseCase: DeleteIncomeUseCase
+    private val deleteIncomeUseCase: DeleteIncomeUseCase,
+    private val monthStartDayStore: MonthStartDayStore = DefaultMonthStartDayStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(IncomeManagementUiState())
     val uiState: StateFlow<IncomeManagementUiState> = _uiState.asStateFlow()
 
     init {
-        val currentMonth = DateTimeUtil.getCurrentMonth()
-        loadIncomes(currentMonth)
+        viewModelScope.launch {
+            val currentMonth = DateTimeUtil.getCurrentMonth(monthStartDayStore.monthStartDay.first())
+            loadIncomes(currentMonth)
+        }
     }
 
     private fun loadIncomes(month: String) {

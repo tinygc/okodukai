@@ -42,6 +42,22 @@ object BackupMigrationDefinitions {
         root.toString()
     }
 
+    val V3_TO_V4 = BackupMigrationStep { rawJson ->
+        val root = JsonParser.parseString(rawJson).asJsonObject
+        val payload = root.getAsJsonObject("payload")
+            ?: throw IllegalArgumentException("payload が存在しません")
+        val settings = payload.getAsJsonObject("settings")
+            ?: throw IllegalArgumentException("settings が存在しません")
+
+        val normalizedMonthStartDay = runCatching {
+            if (settings.has("monthStartDay")) settings.get("monthStartDay").asInt else 1
+        }.getOrDefault(1).coerceIn(1, 31)
+        settings.addProperty("monthStartDay", normalizedMonthStartDay)
+
+        root.addProperty("backupSchemaVersion", 4)
+        root.toString()
+    }
+
     private fun defaultPolicyJson() =
         JsonParser.parseString(
             """

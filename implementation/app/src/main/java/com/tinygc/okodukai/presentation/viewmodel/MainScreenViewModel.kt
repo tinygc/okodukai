@@ -10,6 +10,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -29,6 +30,7 @@ internal fun calculateShouldShowInitialSetupDialog(
 }
 
 @HiltViewModel
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class MainScreenViewModel @Inject constructor(
     private val userPreferencesDataStore: UserPreferencesDataStore,
     private val budgetRepository: BudgetRepository
@@ -49,15 +51,27 @@ class MainScreenViewModel @Inject constructor(
             initialValue = false
         )
 
+    private val budgetExistsForCurrentLogicalMonth: StateFlow<Boolean> = userPreferencesDataStore.monthStartDay
+        .flatMapLatest { monthStartDay ->
+            val currentMonth = DateTimeUtil.getCurrentMonth(monthStartDay)
+            budgetRepository.observeBudgetByMonth(currentMonth)
+        }
+        .map { budget -> budget != null }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = false
+        )
+
     val shouldShowInitialSetupDialog: StateFlow<Boolean> = combine(
         hideInitialSetupAnnouncement,
         templateManagementVisited,
-        budgetRepository.observeBudgetByMonth(DateTimeUtil.getCurrentMonth())
-    ) { hideFlag, templateVisited, budget ->
+        budgetExistsForCurrentLogicalMonth
+    ) { hideFlag, templateVisited, budgetExists ->
         calculateShouldShowInitialSetupDialog(
             hideFlag = hideFlag,
             templateVisited = templateVisited,
-            budgetExists = budget != null
+            budgetExists = budgetExists
         )
     }
         .stateIn(

@@ -10,7 +10,7 @@ import com.tinygc.okodukai.data.local.entity.SavingGoalEntity
 import com.tinygc.okodukai.data.local.entity.TemplateEntity
 
 object BackupSchemas {
-    const val CURRENT_SCHEMA_VERSION = 3
+    const val CURRENT_SCHEMA_VERSION = 4
     const val BACKUP_FILE_NAME = "okodukai_backup.json"
 
     const val KEY_BUDGETS = "budgets"
@@ -32,7 +32,8 @@ data class BackupSettings(
     @SerializedName("defaultCategoryId") val defaultCategoryId: String? = null,
     @SerializedName("goalAchievementMode") val goalAchievementMode: String = BackupSchemas.DEFAULT_GOAL_ACHIEVEMENT_MODE,
     @SerializedName("hideInitialSetupAnnouncement") val hideInitialSetupAnnouncement: Boolean = false,
-    @SerializedName("templateManagementVisited") val templateManagementVisited: Boolean = false
+    @SerializedName("templateManagementVisited") val templateManagementVisited: Boolean = false,
+    @SerializedName("monthStartDay") val monthStartDay: Int = 1
 )
 
 data class BackupPayload(

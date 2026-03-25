@@ -117,6 +117,52 @@ interface ExpenseDao {
     """)
     fun getTotalByMonthFlow(month: String): Flow<Int>
 
+    @Query("""
+        SELECT * FROM expenses
+        WHERE date >= :startDate AND date < :endDateExclusive
+        ORDER BY date DESC, created_at DESC
+    """)
+    suspend fun getByDateRange(startDate: String, endDateExclusive: String): List<ExpenseEntity>
+
+    @Query("""
+        SELECT * FROM expenses
+        WHERE date >= :startDate AND date < :endDateExclusive
+        ORDER BY date DESC, created_at DESC
+    """)
+    fun getByDateRangeFlow(startDate: String, endDateExclusive: String): Flow<List<ExpenseEntity>>
+
+    @Query("""
+        SELECT * FROM expenses
+        WHERE date >= :startDate AND date < :endDateExclusive
+        AND is_uncategorized = 0
+        ORDER BY date DESC, created_at DESC
+    """)
+    suspend fun getCategorizedByDateRange(startDate: String, endDateExclusive: String): List<ExpenseEntity>
+
+    @Query("""
+        SELECT * FROM expenses
+        WHERE date >= :startDate AND date < :endDateExclusive
+        AND is_uncategorized = 1
+        ORDER BY date DESC, created_at DESC
+    """)
+    fun getUncategorizedByDateRangeFlow(startDate: String, endDateExclusive: String): Flow<List<ExpenseEntity>>
+
+    @Query("""
+        SELECT COALESCE(SUM(amount), 0)
+        FROM expenses
+        WHERE date >= :startDate AND date < :endDateExclusive
+        AND is_uncategorized = 0
+    """)
+    suspend fun getTotalByDateRange(startDate: String, endDateExclusive: String): Int
+
+    @Query("""
+        SELECT COALESCE(SUM(amount), 0)
+        FROM expenses
+        WHERE date >= :startDate AND date < :endDateExclusive
+        AND is_uncategorized = 0
+    """)
+    fun getTotalByDateRangeFlow(startDate: String, endDateExclusive: String): Flow<Int>
+
     /**
      * 全支出を取得（デバッグ用）
      */
