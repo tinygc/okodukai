@@ -84,9 +84,13 @@ class BillingRepositoryImpl @Inject constructor(
     }
 
     override suspend fun initialize() {
-        ensureConnected()
-        queryExistingPurchases()
-        loadPrice()
+        try {
+            ensureConnected()
+            queryExistingPurchases()
+            loadPrice()
+        } catch (e: Exception) {
+            Log.w(TAG, "Billing initialization failed (Google Play not available?): ${e.message}")
+        }
     }
 
     private suspend fun ensureConnected() {
