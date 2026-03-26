@@ -104,13 +104,6 @@ jobs:
           path: implementation/app/build/outputs/mapping/release/mapping.txt
           if-no-files-found: warn
 
-      - name: Upload native debug symbols artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: okodukai-release-native-symbols
-          path: implementation/app/build/outputs/native-debug-symbols/release/native-debug-symbols.zip
-          if-no-files-found: warn
-
       - name: Resolve release tag
         id: release_tag
         if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.create_release) }}
@@ -122,7 +115,7 @@ jobs:
 
       - name: Create GitHub Release
         if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.create_release) }}
-        uses: softprops/action-gh-release@v2.5.0
+        uses: softprops/action-gh-release@v2.7.0
         with:
           tag_name: ${{ steps.release_tag.outputs.tag }}
           name: Okodukai ${{ steps.release_tag.outputs.tag }}
@@ -131,7 +124,6 @@ jobs:
             implementation/app/build/outputs/apk/release/*.apk
             implementation/app/build/outputs/bundle/release/*.aab
             implementation/app/build/outputs/mapping/release/mapping.txt
-            implementation/app/build/outputs/native-debug-symbols/release/native-debug-symbols.zip
 
       - name: Summary
         run: |
@@ -140,7 +132,6 @@ jobs:
           echo "- APK: implementation/app/build/outputs/apk/release/*.apk" >> "$GITHUB_STEP_SUMMARY"
           echo "- AAB: implementation/app/build/outputs/bundle/release/*.aab" >> "$GITHUB_STEP_SUMMARY"
           echo "- Mapping: implementation/app/build/outputs/mapping/release/mapping.txt" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Native symbols: implementation/app/build/outputs/native-debug-symbols/release/native-debug-symbols.zip" >> "$GITHUB_STEP_SUMMARY"
           if [ "${{ github.event_name }}" = "push" ]; then
             echo "- Tag: ${{ github.ref_name }}" >> "$GITHUB_STEP_SUMMARY"
           elif [ "${{ inputs.create_release }}" = "true" ]; then
