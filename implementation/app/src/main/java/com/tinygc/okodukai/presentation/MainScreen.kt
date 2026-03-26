@@ -47,7 +47,11 @@ import com.tinygc.okodukai.presentation.screen.MonthlySummaryScreen
 import com.tinygc.okodukai.presentation.screen.QuickAmountSettingScreen
 import com.tinygc.okodukai.presentation.screen.SavingGoalManagementScreen
 import com.tinygc.okodukai.presentation.screen.TemplateManagementScreen
+import com.tinygc.okodukai.presentation.screen.RemoveAdsScreen
 import com.tinygc.okodukai.presentation.viewmodel.MainScreenViewModel
+import com.tinygc.okodukai.presentation.component.AdBanner
+import com.tinygc.okodukai.domain.repository.BillingRepository
+import androidx.compose.material3.HorizontalDivider
 
 private val monthArgRegex = Regex("^\\d{4}-\\d{2}$")
 private const val ROUTE_BUDGET_SETTING = "budget_setting"
@@ -83,12 +87,14 @@ internal fun initialSetupRoute(destination: InitialSetupDestination): String {
 
 @Composable
 fun MainScreen(
-    viewModel: MainScreenViewModel = hiltViewModel()
+    viewModel: MainScreenViewModel = hiltViewModel(),
+    billingRepository: BillingRepository
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val shouldShowDialog by viewModel.shouldShowInitialSetupDialog.collectAsState()
+    val isAdRemovalPurchased by billingRepository.isAdRemovalPurchased.collectAsState(initial = false)
     var doNotShowAgain by rememberSaveable { mutableStateOf(false) }
     var dismissInitialSetupUntilLeaveMainTabs by rememberSaveable { mutableStateOf(false) }
     var forceShowInitialSetupDialog by rememberSaveable { mutableStateOf(false) }
@@ -116,7 +122,12 @@ fun MainScreen(
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
+            Column {
+                if (!isAdRemovalPurchased) {
+                    HorizontalDivider()
+                    AdBanner()
+                }
+                NavigationBar {
                 items.forEach { destination ->
                     val selected = currentDestination?.hierarchy?.any { it.route == destination.route } == true
                     NavigationBarItem(
@@ -142,6 +153,7 @@ fun MainScreen(
                         )
                     )
                 }
+            }
             }
         }
     ) { paddingValues ->
@@ -188,6 +200,8 @@ fun MainScreen(
                     onNavigateToSavingGoal = { navController.navigate("saving_goal_management") },
                     onNavigateToQuickAmountSetting = { navController.navigate("quick_amount_setting") },
                     onNavigateToBackup = { navController.navigate("backup_management") },
+                    onNavigateToRemoveAds = { navController.navigate("remove_ads") },
+                    isAdRemovalPurchased = isAdRemovalPurchased,
                     onShowInitialSetupGuide = {
                         viewModel.showInitialSetupAnnouncementAgain()
                         doNotShowAgain = false
@@ -247,6 +261,12 @@ fun MainScreen(
             }
             composable("quick_amount_setting") {
                 QuickAmountSettingScreen(
+                    paddingValues = paddingValues,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable("remove_ads") {
+                RemoveAdsScreen(
                     paddingValues = paddingValues,
                     onBack = { navController.popBackStack() }
                 )

@@ -36,6 +36,8 @@ fun ManagementHubScreen(
     onNavigateToSavingGoal: () -> Unit = {},
     onNavigateToBackup: () -> Unit = {},
     onNavigateToQuickAmountSetting: () -> Unit = {},
+    onNavigateToRemoveAds: () -> Unit = {},
+    isAdRemovalPurchased: Boolean = false,
     onShowInitialSetupGuide: () -> Unit = {}
 ) {
     ManagementHubContent(
@@ -49,6 +51,8 @@ fun ManagementHubScreen(
         onNavigateToSavingGoal = onNavigateToSavingGoal,
         onNavigateToBackup = onNavigateToBackup,
         onNavigateToQuickAmountSetting = onNavigateToQuickAmountSetting,
+        onNavigateToRemoveAds = onNavigateToRemoveAds,
+        isAdRemovalPurchased = isAdRemovalPurchased,
         onShowInitialSetupGuide = onShowInitialSetupGuide
     )
 }
@@ -65,6 +69,8 @@ internal fun ManagementHubContent(
     onNavigateToSavingGoal: () -> Unit = {},
     onNavigateToBackup: () -> Unit = {},
     onNavigateToQuickAmountSetting: () -> Unit = {},
+    onNavigateToRemoveAds: () -> Unit = {},
+    isAdRemovalPurchased: Boolean = false,
     onShowInitialSetupGuide: () -> Unit = {}
 ) {
     LazyColumn(
@@ -143,6 +149,18 @@ internal fun ManagementHubContent(
         }
         itemContent {
             ManagementHubItem(label = "バックアップ", onClick = onNavigateToBackup)
+        }
+        itemContent {
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+        itemContent {
+            ManagementHubSectionTitle(title = "その他")
+        }
+        itemContent {
+            ManagementHubItem(
+                label = if (isAdRemovalPurchased) "広告非表示（購入済み）" else "広告を非表示にする",
+                onClick = if (isAdRemovalPurchased) ({}) else onNavigateToRemoveAds
+            )
         }
         itemContent {
             Spacer(modifier = Modifier.height(8.dp))

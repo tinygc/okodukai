@@ -64,6 +64,7 @@
 - 家計管理セクション: 予算設定 / 月別履歴 / 臨時収入管理 / 貯金目標管理
 - 入力設定セクション: カテゴリ管理 / テンプレ管理 / デフォルトカテゴリ設定 / クイック入力金額設定
 - データ管理セクション: バックアップ
+- その他セクション: 広告を非表示にする
 
 ### 3.5 初回起動セットアップ案内
 - 表示条件は「予算未設定」または「テンプレ管理未訪問」
@@ -105,6 +106,15 @@
 - 貯金目標の作成・編集・削除
 - 達成モード（個別達成/合計達成）の切替
 - 繰越残高と目標進捗の確認
+
+### 11. 広告削除購入
+- Google Play Billing Libraryによる買い切り（非消費型）購入
+- 購入状態の確認と復元
+- 購入済みの場合はAdMobバナー広告を非表示
+
+### 広告表示
+- Google AdMobアダプティブバナーをBottomNavigationの直上に表示
+- 購入状態に応じて表示/非表示を切り替え
 
 ---
 
@@ -157,6 +167,7 @@
 - 管理 -> デフォルトカテゴリ設定
 - 管理 -> クイック入力金額設定
 - 管理 -> バックアップ
+- 管理 -> 広告削除購入
 - 月次サマリ -> カテゴリ別一覧
 - 月次サマリ -> 支出一覧
 - 支出一覧 -> 支出編集
@@ -218,6 +229,10 @@
 - hideInitialSetupAnnouncement (初期設定ガイドを非表示にするフラグ)
 - monthStartDay (月開始日。入力は1〜31、集計時は29〜31を28として扱う)
 
+### BillingState（Google Play管理、アプリ内DB対象外）
+- isAdRemovalPurchased: Boolean — Google Play Billingから取得
+- バックアップ/復元の対象外（Google Play側で永続化）
+
 ---
 
 ## 例: ユースケース一覧
@@ -231,6 +246,9 @@
 - UpdateTemplate
 - GetMonthlySummary
 - GetCategorySummary
+- QueryPurchaseState
+- PurchaseAdRemoval
+- RestorePurchase
 
 ---
 

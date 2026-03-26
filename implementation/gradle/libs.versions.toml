@@ -22,6 +22,8 @@ playServicesAuth = "21.2.0"
 googleDriveApi = "v3-rev197-1.25.0"
 googleHttpClient = "1.43.3"
 googleApiClient = "2.2.0"
+playBilling = "7.1.1"
+admob = "24.2.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -72,6 +74,8 @@ google-api-services-drive = { group = "com.google.apis", name = "google-api-serv
 google-http-client-android = { group = "com.google.http-client", name = "google-http-client-android", version.ref = "googleHttpClient" }
 google-http-client-gson = { group = "com.google.http-client", name = "google-http-client-gson", version.ref = "googleHttpClient" }
 google-api-client-android = { group = "com.google.api-client", name = "google-api-client-android", version.ref = "googleApiClient" }
+play-billing = { group = "com.android.billingclient", name = "billing", version.ref = "playBilling" }
+google-ads = { group = "com.google.android.gms", name = "play-services-ads", version.ref = "admob" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

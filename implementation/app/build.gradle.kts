@@ -31,6 +31,8 @@ android {
     val releaseKeyPassword = propOrEnv("OKODUKAI_KEY_PASSWORD") ?: ""
     val buildVersionCode = (project.findProperty("VERSION_CODE") as String?)?.toIntOrNull() ?: 1
     val buildVersionName = (project.findProperty("VERSION_NAME") as String?) ?: "0.1.1"
+    val admobAppId = propOrEnv("ADMOB_APP_ID") ?: "ca-app-pub-3940256099942544~3347511713"
+    val admobBannerAdUnitId = propOrEnv("ADMOB_BANNER_AD_UNIT_ID") ?: "ca-app-pub-3940256099942544/9214589741"
 
     defaultConfig {
         applicationId = "com.tinygc.okodukai"
@@ -38,6 +40,10 @@ android {
         targetSdk = 36
         versionCode = buildVersionCode
         versionName = buildVersionName
+
+        manifestPlaceholders["ADMOB_APP_ID"] = admobAppId
+
+        buildConfigField("String", "ADMOB_BANNER_AD_UNIT_ID", "\"${admobBannerAdUnitId}\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -135,6 +141,10 @@ dependencies {
     implementation(libs.google.http.client.android)
     implementation(libs.google.http.client.gson)
     implementation(libs.google.api.client.android)
+
+    // Ads & Billing
+    implementation(libs.google.ads)
+    implementation(libs.play.billing)
 
     // Testing
     testImplementation(libs.junit)
