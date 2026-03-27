@@ -61,12 +61,12 @@ jobs:
           OKODUKAI_STORE_PASSWORD: ${{ secrets.OKODUKAI_STORE_PASSWORD }}
           OKODUKAI_KEY_ALIAS: ${{ secrets.OKODUKAI_KEY_ALIAS }}
           OKODUKAI_KEY_PASSWORD: ${{ secrets.OKODUKAI_KEY_PASSWORD }}
-          ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
-          ADMOB_BANNER_AD_UNIT_ID: ${{ secrets.ADMOB_BANNER_AD_UNIT_ID }}
+          ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID || vars.ADMOB_APP_ID }}
+          ADMOB_BANNER_AD_UNIT_ID: ${{ secrets.ADMOB_BANNER_AD_UNIT_ID || vars.ADMOB_BANNER_AD_UNIT_ID }}
           DEFAULT_VERSION_CODE: ${{ github.run_number }}
         run: |
           if [ -z "${ADMOB_APP_ID}" ] || [ -z "${ADMOB_BANNER_AD_UNIT_ID}" ]; then
-            echo "ADMOB_APP_ID / ADMOB_BANNER_AD_UNIT_ID のSecretsが未設定です" >&2
+            echo "ADMOB_APP_ID / ADMOB_BANNER_AD_UNIT_ID が未設定です（Actions Secrets または Variables を設定してください）" >&2
             exit 1
           fi
 
